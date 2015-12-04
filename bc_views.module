@@ -1,0 +1,71 @@
+<?php
+
+/**
+ * Implements hook_block_info().
+ */
+function bc_views_block_info() {
+ 	$blocks['solrYearbook'] = array( 
+ 		'info' => t('SOLR Collection for Yearbooks.'),
+		'status' => BLOCK_VISIBILITY_LIST,
+		'region' => 'content'
+ 	);
+	$blocks['solrNewspaper'] = array( 
+		'info' => t('SOLR Collection for Studennt Publications.'),
+		'status' => BLOCK_VISIBILITY_LIST,
+		'region' => 'content'
+	);
+	$blocks['solrStudentPubs'] = array( 
+		'info' => t('SOLR Collection for Studennt Publications.'),
+		'status' => BLOCK_VISIBILITY_LIST,
+		'region' => 'content'
+	);
+	$blocks['solrPhotos'] = array( 
+		'info' => t('SOLR Collection for Photos.'),
+		'status' => BLOCK_VISIBILITY_LIST,
+		'region' => 'content'
+	);
+ 	return $blocks;
+}
+
+function bc_views_block_view($delta = '') {
+	$block = array();
+	dsm($delta);
+	switch ($delta) {
+
+		// Yearbook View
+		case 'solrYearbook' :
+			if (!$_GET['display']) {
+    			dsm('updated $_GET');
+    			$_GET['display'] = 'grid';
+			}
+			$query = 'mods_relatedItem_host_titleInfo_title_ms%3A"Mortarboard" AND RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/islandora:bookCollection"';
+			$content = islandora_solr($query, NULL);
+			$block['content'] = $content;
+		break;
+
+		// Barnard Bulletin View
+		case 'solrNewspaper';
+			$query = '';
+			$block['content'] = 'Pseudo Exception: Barnard Bulletin: Not Implemented.';
+		break;
+
+		// Student Publications View
+		case 'solrStudentPubs';
+			if (!$_GET['display']) {
+    			dsm('updated $_GET');
+    			$_GET['display'] = 'grid';
+			}
+			$query = 'RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/bc:barnard-literary-magazine"';
+			$content = islandora_solr($query, NULL);
+			$block['content'] = $content;
+		break;
+
+		// Photographs View
+		case 'solrPhotos';
+			//mods_genre_ms:photographs
+			$query = '';
+			$block['content'] = 'Pseudo Exception: Photographs: Not Implemented.';
+		break;
+	}
+	return $block;
+}
