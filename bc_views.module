@@ -5,17 +5,17 @@
  */
 function bc_views_block_info() {
  	$blocks['solrYearbook'] = array( 
- 		'info' => t('SOLR Collection for Yearbooks.'),
+ 		'info' => t('SOLR Collection for the Annual and Mortarboard (yearbook).'),
 		'status' => BLOCK_VISIBILITY_LIST,
 		'region' => 'content'
  	);
 	$blocks['solrNewspaper'] = array( 
-		'info' => t('SOLR Collection for Studennt Publications.'),
+		'info' => t('SOLR Collection for the Barnard Bulletin (newspaper).'),
 		'status' => BLOCK_VISIBILITY_LIST,
 		'region' => 'content'
 	);
 	$blocks['solrStudentPubs'] = array( 
-		'info' => t('SOLR Collection for Studennt Publications.'),
+		'info' => t('SOLR Collection for Student Publications.'),
 		'status' => BLOCK_VISIBILITY_LIST,
 		'region' => 'content'
 	);
@@ -68,4 +68,30 @@ function bc_views_block_view($delta = '') {
 		break;
 	}
 	return $block;
+}
+
+/* 
+ * either useful or already deprecated. time will tell.
+ * function solrQuery()
+ * arg1 = SOLR Query
+ * 
+*/
+function solrQuery($q) { 
+  $qp = new IslandoraSolrQueryProcessor();
+  $query = $q;
+  $qp->buildQuery($query);
+  $qp->executeQuery();
+
+  $numFound = $qp->islandoraSolrResult['response']['numFound'];
+  $objects = $qp->islandoraSolrResult['response']['objects'];
+
+  dsm($numFound);
+  
+  // LOGIC HERE (foreach) if ($numFound > 1) { do this } else { do the shit below } 
+  // IS THIS NESS?
+  $pid = $objects[0]['PID'];
+  $fedora_object = islandora_object_load($pid);
+  $islandora_view = islandora_view_object($fedora_object);
+
+  return $islandora_view;
 }
