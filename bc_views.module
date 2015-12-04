@@ -4,36 +4,55 @@
  * Implements hook_block_info().
  */
 function bc_views_block_info() {
- 	$blocks['solrYearbook'] = array( 
+ 	$blocks['bc_solrYearbook'] = array( 
  		'info' => t('SOLR Collection for the Annual and Mortarboard (yearbook).'),
-		'status' => BLOCK_VISIBILITY_LIST,
+		'status' => BLOCK_VISIBILITY_LISTED,
+		'pages' => 'yearbook2',
 		'region' => 'content'
  	);
-	$blocks['solrNewspaper'] = array( 
+	$blocks['bc_solrNewspaper'] = array( 
 		'info' => t('SOLR Collection for the Barnard Bulletin (newspaper).'),
-		'status' => BLOCK_VISIBILITY_LIST,
+		'status' => BLOCK_VISIBILITY_LISTED,
+		'pages' => 'newspaper2',
 		'region' => 'content'
 	);
-	$blocks['solrStudentPubs'] = array( 
+	$blocks['bc_solrStudentPubs'] = array( 
 		'info' => t('SOLR Collection for Student Publications.'),
-		'status' => BLOCK_VISIBILITY_LIST,
+		'status' => BLOCK_VISIBILITY_LISTED,
+		'pages' => 'studentpubs2',
 		'region' => 'content'
 	);
-	$blocks['solrPhotos'] = array( 
+	$blocks['bc_solrPhotos'] = array( 
 		'info' => t('SOLR Collection for Photos.'),
-		'status' => BLOCK_VISIBILITY_LIST,
+		'status' => BLOCK_VISIBILITY_LISTED,
+		'pages' => 'photos2',
 		'region' => 'content'
 	);
  	return $blocks;
 }
 
+/**
+ * Implements hook_block_save().
+ */
+function bc_views_block_save($delta = '', $edit = array()) {
+  $prefix = 'bc_solr';
+  if (stripos($delta, $prefix)) {
+    dsm($delta);
+    dsm($edit);
+    dsm($edit[pages]);
+  }
+}
+
+/**
+ * Implements hook_block_view().
+ */
 function bc_views_block_view($delta = '') {
 	$block = array();
 	dsm($delta);
 	switch ($delta) {
 
 		// Yearbook View
-		case 'solrYearbook' :
+		case 'bc_solrYearbook' :
 			if (!$_GET['display']) {
     			dsm('updated $_GET');
     			$_GET['display'] = 'grid';
@@ -44,13 +63,13 @@ function bc_views_block_view($delta = '') {
 		break;
 
 		// Barnard Bulletin View
-		case 'solrNewspaper';
+		case 'bc_solrNewspaper';
 			$query = '';
 			$block['content'] = 'Pseudo Exception: Barnard Bulletin: Not Implemented.';
 		break;
 
 		// Student Publications View
-		case 'solrStudentPubs';
+		case 'bc_solrStudentPubs';
 			if (!$_GET['display']) {
     			dsm('updated $_GET');
     			$_GET['display'] = 'grid';
@@ -61,7 +80,7 @@ function bc_views_block_view($delta = '') {
 		break;
 
 		// Photographs View
-		case 'solrPhotos';
+		case 'bc_solrPhotos';
 			//mods_genre_ms:photographs
 			$query = '';
 			$block['content'] = 'Pseudo Exception: Photographs: Not Implemented.';
