@@ -35,12 +35,12 @@ function bc_views_block_info() {
  * Implements hook_block_save().
  */
 function bc_views_block_save($delta = '', $edit = array()) {
-  $prefix = 'bc_solr';
-  if (stripos($delta, $prefix) !== FALSE) {
-    dsm($delta);
-    dsm($edit);
-    dsm($edit[pages]);
-  }
+	$prefix = 'bc_solr';
+	if (stripos($delta, $prefix) !== FALSE) {
+		dsm($delta);
+		dsm($edit);
+		dsm($edit[pages]);
+	}
 }
 
 /**
@@ -53,9 +53,7 @@ function bc_views_block_view($delta = '') {
 
 		// Yearbook View
 		case 'bc_solrYearbook' :
-			if (!$_GET['display']) {
-    			$_GET['display'] = 'grid';
-			}
+			blockDefaultView();
 			$query = 'mods_relatedItem_host_titleInfo_title_ms%3A"Mortarboard" AND RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/islandora:bookCollection"';
 			$content = islandora_solr($query, NULL);
 			$block['content'] = $content;
@@ -63,15 +61,14 @@ function bc_views_block_view($delta = '') {
 
 		// Barnard Bulletin View
 		case 'bc_solrNewspaper';
+			blockDefaultView();
 			$query = '';
 			$block['content'] = 'Pseudo Exception: Barnard Bulletin: Not Implemented.';
 		break;
 
 		// Student Publications View
 		case 'bc_solrStudentPubs';
-			if (!$_GET['display']) {
-    			$_GET['display'] = 'grid';
-			}
+			blockDefaultView(); // this should be a variable lookup eventually.
 			$query = 'RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/bc:barnard-literary-magazine"';
 			$content = islandora_solr($query, NULL);
 			$block['content'] = $content;
@@ -79,45 +76,57 @@ function bc_views_block_view($delta = '') {
 
 		// Photographs View
 		case 'bc_solrPhotos';
-			//mods_genre_ms:photographs
-			$query = '';
-			$block['content'] = 'Pseudo Exception: Photographs: Not Implemented.';
+			blockDefaultView();
+			$query = 'mods_genre_ms%3A"photographs"';
+			$content = islandora_solr($query, NULL);
+			$block['content'] = $content;
 		break;
 	}
 	return $block;
 }
 
+function blockDefaultView() {
+	if (!$_GET['display']) { $_GET['display']='grid'; }
+}
+
+
+// BEGIN ALL OF THE SOLR QUERY AND RESULT HOOKS WE MIGHT EVER WANT.
+
 /**
  * Implements hook_islandora_solr_query().
  */
 function bc_views_islandora_solr_query($islandora_solr_query) {
-	dsm("hook query fires");
 }
 
 /**
  * Implements hook_islandora_solr_query_alter().
- * I use this hook to respect the 'default landing page display count' setting (soon to come).
+ * Using this hook to switch around the actual SOLR query: q = fq and iq = *:* so q = isempty();
  */
 function bc_views_islandora_solr_query_alter(&$islandora_solr_query) {
-	dsm("hook query alter fires");
+	// If we're on an islandora/search page don't modify the query.
+	if (strpos(request_path(),'islandora/search/') !== FALSE) {
+		return;
+	} 
+	// Otherwise assume we're on one of our custom landing pages (this is a dangerous assumption but it works for now)
 	$islandora_solr_query->solrLimit = '8';
+	$islandora_solr_query->solrParams['fq'][] = $islandora_solr_query->solrQuery;
+	$islandora_solr_query->internalSolrQuery = '*:*';
+	$islandora_solr_query->solrQuery = '';
+	// dsm($islandora_solr_query);
 }
 
-// AFTER THIS THE QUERY IS PROCESSED BY ISLANDORA_SOLR();
+// !!
+// At this point the SOLR Query is executed.
+// !!
 
 /**
  * Implements hook_islandora_solr_query_result().
  */
 function bc_views_islandora_solr_query_result($result) {
-	dsm("hook query result fires");
-	dsm($result);
 }
 
 /**
  * Implements hook_islandora_solr_results_alter().
  */
 function bc_views_islandora_solr_results_alter(&$search_results, $query_processor) {
-	dsm("hook query result alter fires");
-	dsm($search_results);
-	dsm($query_processor);
 }
