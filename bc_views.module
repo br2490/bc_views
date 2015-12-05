@@ -43,11 +43,6 @@ function bc_views_block_save($delta = '', $edit = array()) {
   }
 }
 
-function bc_views_islandora_solr_object_alter(&$results, $qp) {
-  dsm($results);
-  dsm($qp);
-}
-
 /**
  * Implements hook_block_view().
  */
@@ -77,7 +72,6 @@ function bc_views_block_view($delta = '') {
 			if (!$_GET['display']) {
     			$_GET['display'] = 'grid';
 			}
-			//dsm($_GET);
 			$query = 'RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/bc:barnard-literary-magazine"';
 			$content = islandora_solr($query, NULL);
 			$block['content'] = $content;
@@ -93,49 +87,37 @@ function bc_views_block_view($delta = '') {
 	return $block;
 }
 
-// http://localhost:8080/solr/select?facet=true&facet.mincount=1&facet.limit=30&facet.field=mods_subject_topic_ms&facet.field=mods_genre_ms&facet.field=mods_subject_name_personal_namePart_ms&facet.field=mods_subject_name_corporate_namePart_ms&facet.field=mods_name_personal_namePart_ms&facet.field=RELS_EXT_isMemberOf_uri_ms&facet.field=mods_name_corporate_namePart_ms&facet.field=mods_relatedItem_host_titleInfo_title_ms&facet.field=mods_relatedItem_series_titleInfo_title_ms&facet.date=mods_originInfo_dateCreated_mdt&f.mods_originInfo_dateCreated_mdt.facet.date.start=NOW%2FYEAR-200YEARS&f.mods_originInfo_dateCreated_mdt.facet.date.end=NOW%2FYEAR-1YEAR&f.mods_originInfo_dateCreated_mdt.facet.date.gap=%2B10YEAR&f.mods_originInfo_dateCreated_mdt.facet.mincount=0&facet.date.start=NOW%2FYEAR-20YEARS&facet.date.end=NOW&facet.date.gap=%2B1YEAR&hl=true&hl.fl=OCR_t&hl.fragsize=400&hl.simple.pre=%3Cspan+class%3D%22islandora-solr-highlight%22%3E&hl.simple.post=%3C%2Fspan%3E&fq=-RELS_EXT_isConstituentOf_uri_mt%3A%5B%2A+TO+%2A%5D&fq=RELS_EXT_isViewableByUser_literal_ms%3A%22brosner%22+OR+RELS_EXT_isViewableByRole_literal_ms%3A%22authenticated+user%22+OR+RELS_EXT_isViewableByRole_literal_ms%3A%22administrator%22+OR+%28%28%2A%3A%2A+-RELS_EXT_isViewableByUser_literal_ms%3A%5B%2A+TO+%2A%5D%29+AND+%28%2A%3A%2A+-RELS_EXT_isViewableByRole_literal_ms%3A%5B%2A+TO+%2A%5D%29%29&version=1.2&wt=json&json.nl=map&q=RELS_EXT_isMemberOf_uri_ms%3A%22info%3Afedora%2Fbc%3Abarnard-literary-magazine%22&start=0&rows=12&indent=on&debugQuery=true
+/**
+ * Implements hook_islandora_solr_query().
+ */
+function bc_views_islandora_solr_query($islandora_solr_query) {
+	dsm("hook query fires");
+}
 
 /**
  * Implements hook_islandora_solr_query_alter().
  * I use this hook to respect the 'default landing page display count' setting (soon to come).
  */
 function bc_views_islandora_solr_query_alter(&$islandora_solr_query) {
-    $islandora_solr_query->solrParams['rows']=8;
+	dsm("hook query alter fires");
+	$islandora_solr_query->solrLimit = '8';
 }
 
-// FML.
-function bc_views_islandora_solr_query($islandora_solr_query) {
-	$islandora_solr_query->solrParams['rows']=8;
-    dsm($islandora_solr_query);
+// AFTER THIS THE QUERY IS PROCESSED BY ISLANDORA_SOLR();
+
+/**
+ * Implements hook_islandora_solr_query_result().
+ */
+function bc_views_islandora_solr_query_result($result) {
+	dsm("hook query result fires");
+	dsm($result);
 }
 
-// WHYYYY!?!?!?!?!
-function bc_views_islandora_solr_results_alter($islandora_solr_results) {
-}
-
-
-/* 
- * either useful or already deprecated. time will tell.
- * function solrQuery()
- * arg1 = SOLR Query
- * 
-*/
-function solrQuery($q) { 
-  $qp = new IslandoraSolrQueryProcessor();
-  $query = $q;
-  $qp->buildQuery($query);
-  $qp->executeQuery();
-
-  $numFound = $qp->islandoraSolrResult['response']['numFound'];
-  $objects = $qp->islandoraSolrResult['response']['objects'];
-
-  dsm($numFound);
-  
-  // LOGIC HERE (foreach) if ($numFound > 1) { do this } else { do the shit below } 
-  // IS THIS NESS?
-  $pid = $objects[0]['PID'];
-  $fedora_object = islandora_object_load($pid);
-  $islandora_view = islandora_view_object($fedora_object);
-
-  return $islandora_view;
+/**
+ * Implements hook_islandora_solr_results_alter().
+ */
+function bc_views_islandora_solr_results_alter(&$search_results, $query_processor) {
+	dsm("hook query result alter fires");
+	dsm($search_results);
+	dsm($query_processor);
 }
