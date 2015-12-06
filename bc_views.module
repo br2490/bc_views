@@ -32,7 +32,7 @@ function bc_views_block_info() {
 }
 
 /**
- * Implements hook_block_save().
+ * Implements hook_block_save(). (UNUSED AT PRESENT)
  */
 function bc_views_block_save($delta = '', $edit = array()) {
 	$prefix = 'bc_solr';
@@ -48,45 +48,87 @@ function bc_views_block_save($delta = '', $edit = array()) {
  */
 function bc_views_block_view($delta = '') {
 	$block = array();
-	dsm($delta);
 	switch ($delta) {
 
 		// Yearbook View
 		case 'bc_solrYearbook' :
 			blockDefaultView();
+			
 			$query = 'mods_relatedItem_host_titleInfo_title_ms%3A"Mortarboard" AND RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/islandora:bookCollection"';
-			$content = islandora_solr($query, NULL);
-			$block['content'] = $content;
+			$solrResultContent = islandora_solr($query, NULL);
+
+			$switchBlock = blockContentRenderer('islandora_solr', 'display_switch');
+			$sortBlock = blockContentRenderer('islandora_solr', 'sort');
+
+			$block['content'] = $switchBlock . $sortBlock;			
+			$block['content'] .= $solrResultContent;
 		break;
 
 		// Barnard Bulletin View
 		case 'bc_solrNewspaper';
 			blockDefaultView();
+
 			$query = '';
+			$solrResultContent = islandora_solr($query, NULL);
+
+			$switchBlock = blockContentRenderer('islandora_solr', 'display_switch');
+			$sortBlock = blockContentRenderer('islandora_solr', 'sort');
+
+			$block['content'] = $switchBlock . $sortBlock;
 			$block['content'] = 'Pseudo Exception: Barnard Bulletin: Not Implemented.';
 		break;
 
 		// Student Publications View
 		case 'bc_solrStudentPubs';
-			blockDefaultView(); // this should be a variable lookup eventually.
+			blockDefaultView(); 
+
 			$query = 'RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/bc:barnard-literary-magazine"';
-			$content = islandora_solr($query, NULL);
-			$block['content'] = $content;
+			$solrResultContent = islandora_solr($query, NULL);
+
+			$switchBlock = blockContentRenderer('islandora_solr', 'display_switch');
+			$sortBlock = blockContentRenderer('islandora_solr', 'sort');
+
+			$block['content'] = $switchBlock . $sortBlock;
+			$block['content'] .= $solrResultContent;
 		break;
 
 		// Photographs View
 		case 'bc_solrPhotos';
 			blockDefaultView();
+			
 			$query = 'mods_genre_ms%3A"photographs"';
-			$content = islandora_solr($query, NULL);
-			$block['content'] = $content;
+			$solrResultContent = islandora_solr($query, NULL);
+
+			$switchBlock = blockContentRenderer('islandora_solr', 'display_switch');
+			$sortBlock = blockContentRenderer('islandora_solr', 'sort');
+
+			$block['content'] = $switchBlock . $sortBlock;
+			$block['content'] .= $solrResultContent;
 		break;
 	}
 	return $block;
 }
 
 function blockDefaultView() {
+	// this should be a variable lookup eventually.
+	// vget whatever, default=>'grid';
 	if (!$_GET['display']) { $_GET['display']='grid'; }
+}
+
+// Generates a rendered block from $module with name $functionName.
+function blockContentRenderer($module, $functionName) {
+	$getBlock = block_load($module, $functionName);
+	$getBlock->theme = $GLOBALS['theme'];
+	$blockRenderBlock = _block_render_blocks(array($getBlock));
+	$blockRenderBuild = _block_get_renderable_array($blockRenderBlock);
+	$blockRendered = drupal_render($blockRenderBuild);
+	return $blockRendered;
+}
+
+// Reports all islandora blocks available... I'm lazy.
+function islandoraBlocks() {
+	$islandoraBlocks = module_invoke('islandora_solr', 'block_info');
+	dsm($islandoraBlocks);
 }
 
 
@@ -104,10 +146,12 @@ function bc_views_islandora_solr_query($islandora_solr_query) {
  */
 function bc_views_islandora_solr_query_alter(&$islandora_solr_query) {
 	// If we're on an islandora/search page don't modify the query.
+	// Reduce nesting.
 	if (strpos(request_path(),'islandora/search/') !== FALSE) {
 		return;
 	} 
 	// Otherwise assume we're on one of our custom landing pages (this is a dangerous assumption but it works for now)
+	// Something to think about: leave solr_query alone unless has no matching solr configuration. 
 	$islandora_solr_query->solrLimit = '8';
 	$islandora_solr_query->solrParams['fq'][] = $islandora_solr_query->solrQuery;
 	$islandora_solr_query->internalSolrQuery = '*:*';
@@ -116,7 +160,7 @@ function bc_views_islandora_solr_query_alter(&$islandora_solr_query) {
 }
 
 // !!
-// At this point the SOLR Query is executed.
+// At this point the SOLR Query is executed!!!
 // !!
 
 /**
