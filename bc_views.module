@@ -70,21 +70,23 @@ function bc_views_block_view($delta = '') {
 		case 'bc_views_Newspaper';
 			blockDefaultView();
 
-			$query = '';
+			$collectionPID = variable_get('bc_islandora_newspaper_pid', 'islandora:74');
+			$query = 'RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/'.$collectionPID.'"';
 			$solrResultContent = islandora_solr($query, NULL);
 
 			$switchBlock = blockContentRenderer('islandora_solr', 'display_switch');
 			$sortBlock = blockContentRenderer('islandora_solr', 'sort');
 
 			$block['content'] = $sortBlock . $switchBlock;
-			$block['content'] = 'Pseudo Exception: Barnard Bulletin: Not Implemented.';
+			$block['content'] .= $solrResultContent;
 		break;
 
 		// Student Publications View
 		case 'bc_views_StudentPubs';
 			blockDefaultView(); 
 
-			$query = 'RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/bc:barnard-literary-magazine"';
+			$collectionPID = variable_get('bc_islandora_pubs_pid', 'islandora:1022');
+			$query = 'RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/'.$collectionPID.'"';
 			$solrResultContent = islandora_solr($query, NULL);
 
 			$switchBlock = blockContentRenderer('islandora_solr', 'display_switch');
