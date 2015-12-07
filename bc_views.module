@@ -4,29 +4,33 @@
  * Implements hook_block_info().
  */
 function bc_views_block_info() {
- 	$blocks['bc_solrYearbook'] = array( 
+ 	$blocks['bc_views_Yearbook'] = array( 
  		'info' => t('SOLR Collection for the Annual and Mortarboard (yearbook).'),
-		'status' => BLOCK_VISIBILITY_LISTED,
+ 		'status' => TRUE,
+		'region' => 'content',
+		'visibility' => BLOCK_VISIBILITY_LISTED,
 		'pages' => 'yearbook2',
-		'region' => 'content'
  	);
-	$blocks['bc_solrNewspaper'] = array( 
+	$blocks['bc_views_Newspaper'] = array( 
 		'info' => t('SOLR Collection for the Barnard Bulletin (newspaper).'),
-		'status' => BLOCK_VISIBILITY_LISTED,
+		'status' => TRUE,
+		'region' => 'content',
+		'visibility' => BLOCK_VISIBILITY_LISTED,
 		'pages' => 'newspaper2',
-		'region' => 'content'
 	);
-	$blocks['bc_solrStudentPubs'] = array( 
+	$blocks['bc_views_StudentPubs'] = array( 
 		'info' => t('SOLR Collection for Student Publications.'),
-		'status' => BLOCK_VISIBILITY_LISTED,
+		'status' => TRUE,
+		'region' => 'content',
+		'visibility' => BLOCK_VISIBILITY_LISTED,
 		'pages' => 'studentpubs2',
-		'region' => 'content'
 	);
-	$blocks['bc_solrPhotos'] = array( 
+	$blocks['bc_views_Photos'] = array( 
 		'info' => t('SOLR Collection for Photos.'),
-		'status' => BLOCK_VISIBILITY_LISTED,
+		'status' => TRUE,
+		'region' => 'content',
+		'visibility' => BLOCK_VISIBILITY_LISTED,
 		'pages' => 'photos2',
-		'region' => 'content'
 	);
  	return $blocks;
 }
@@ -35,11 +39,9 @@ function bc_views_block_info() {
  * Implements hook_block_save(). (UNUSED AT PRESENT)
  */
 function bc_views_block_save($delta = '', $edit = array()) {
-	$prefix = 'bc_solr';
+	$prefix = 'bc_views';
 	if (stripos($delta, $prefix) !== FALSE) {
-		dsm($delta);
 		dsm($edit);
-		dsm($edit[pages]);
 	}
 }
 
@@ -51,7 +53,7 @@ function bc_views_block_view($delta = '') {
 	switch ($delta) {
 
 		// Yearbook View
-		case 'bc_solrYearbook' :
+		case 'bc_views_Yearbook' :
 			blockDefaultView();
 			
 			$query = 'mods_relatedItem_host_titleInfo_title_ms%3A"Mortarboard" AND RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/islandora:bookCollection"';
@@ -60,12 +62,12 @@ function bc_views_block_view($delta = '') {
 			$switchBlock = blockContentRenderer('islandora_solr', 'display_switch');
 			$sortBlock = blockContentRenderer('islandora_solr', 'sort');
 
-			$block['content'] = $switchBlock . $sortBlock;			
+			$block['content'] = $sortBlock . $switchBlock;			
 			$block['content'] .= $solrResultContent;
 		break;
 
 		// Barnard Bulletin View
-		case 'bc_solrNewspaper';
+		case 'bc_views_Newspaper';
 			blockDefaultView();
 
 			$query = '';
@@ -74,12 +76,12 @@ function bc_views_block_view($delta = '') {
 			$switchBlock = blockContentRenderer('islandora_solr', 'display_switch');
 			$sortBlock = blockContentRenderer('islandora_solr', 'sort');
 
-			$block['content'] = $switchBlock . $sortBlock;
+			$block['content'] = $sortBlock . $switchBlock;
 			$block['content'] = 'Pseudo Exception: Barnard Bulletin: Not Implemented.';
 		break;
 
 		// Student Publications View
-		case 'bc_solrStudentPubs';
+		case 'bc_views_StudentPubs';
 			blockDefaultView(); 
 
 			$query = 'RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/bc:barnard-literary-magazine"';
@@ -88,12 +90,12 @@ function bc_views_block_view($delta = '') {
 			$switchBlock = blockContentRenderer('islandora_solr', 'display_switch');
 			$sortBlock = blockContentRenderer('islandora_solr', 'sort');
 
-			$block['content'] = $switchBlock . $sortBlock;
+			$block['content'] = $sortBlock . $switchBlock;
 			$block['content'] .= $solrResultContent;
 		break;
 
 		// Photographs View
-		case 'bc_solrPhotos';
+		case 'bc_views_Photos';
 			blockDefaultView();
 			
 			$query = 'mods_genre_ms%3A"photographs"';
@@ -102,11 +104,27 @@ function bc_views_block_view($delta = '') {
 			$switchBlock = blockContentRenderer('islandora_solr', 'display_switch');
 			$sortBlock = blockContentRenderer('islandora_solr', 'sort');
 
-			$block['content'] = $switchBlock . $sortBlock;
+			$block['content'] = $sortBlock . $switchBlock;
 			$block['content'] .= $solrResultContent;
 		break;
 	}
 	return $block;
+}
+
+function bc_views_block_list_alter(&$blocks) {
+	foreach ($blocks as $block) {
+		if ($block->module == 'bc_views') {
+			// SIDEBAR 1 CONTENT
+			$facets = block_load('islandora_solr', 'basic_facets');
+			$facets->theme=$GLOBALS['theme'];
+			$advanced = block_load('islandora_solr', 'advanced');
+			$advanced->theme=$GLOBALS['theme'];
+			$blocks[] = $facets;
+			$blocks[] = $advanced;
+			dsm($blocks);
+			return; // die
+		}
+	}
 }
 
 function blockDefaultView() {
@@ -137,8 +155,8 @@ function islandoraBlocks() {
 /**
  * Implements hook_islandora_solr_query().
  */
-function bc_views_islandora_solr_query($islandora_solr_query) {
-}
+// function bc_views_islandora_solr_query($islandora_solr_query) {
+// }
 
 /**
  * Implements hook_islandora_solr_query_alter().
@@ -148,15 +166,15 @@ function bc_views_islandora_solr_query_alter(&$islandora_solr_query) {
 	// If we're on an islandora/search page don't modify the query.
 	// Reduce nesting.
 	if (strpos(request_path(),'islandora/search/') !== FALSE) {
-		return;
+		return; //die
 	} 
 	// Otherwise assume we're on one of our custom landing pages (this is a dangerous assumption but it works for now)
 	// Something to think about: leave solr_query alone unless has no matching solr configuration. 
-	$islandora_solr_query->solrLimit = '8';
+	$islandora_solr_query->solrLimit = '8'; // WHY DO YOU DISRESPECT THIS VARIABLE?! WHY!?!?!?!?!?!?!
 	$islandora_solr_query->solrParams['fq'][] = $islandora_solr_query->solrQuery;
 	$islandora_solr_query->internalSolrQuery = '*:*';
 	$islandora_solr_query->solrQuery = '';
-	// dsm($islandora_solr_query);
+	dsm($islandora_solr_query);
 }
 
 // !!
@@ -166,11 +184,11 @@ function bc_views_islandora_solr_query_alter(&$islandora_solr_query) {
 /**
  * Implements hook_islandora_solr_query_result().
  */
-function bc_views_islandora_solr_query_result($result) {
-}
+// function bc_views_islandora_solr_query_result($result) {
+// }
 
 /**
  * Implements hook_islandora_solr_results_alter().
  */
-function bc_views_islandora_solr_results_alter(&$search_results, $query_processor) {
-}
+// function bc_views_islandora_solr_results_alter(&$search_results, $query_processor) {
+// }
