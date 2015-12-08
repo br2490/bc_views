@@ -113,6 +113,11 @@ function bc_views_block_view($delta = '') {
 	return $block;
 }
 
+function bc_views_menu_breadcrumb_alter(&$active_trail, $item) {
+	dsm($active_trail);
+	dsm($item);
+}
+
 function bc_views_block_list_alter(&$blocks) {
 	foreach ($blocks as $block) {
 		if ($block->module == 'bc_views') {
@@ -123,7 +128,7 @@ function bc_views_block_list_alter(&$blocks) {
 			$advanced->theme=$GLOBALS['theme'];
 			$blocks[] = $facets;
 			$blocks[] = $advanced;
-			dsm($blocks);
+			// dsm($blocks);
 			return; // die
 		}
 	}
@@ -176,7 +181,7 @@ function bc_views_islandora_solr_query_alter(&$islandora_solr_query) {
 	$islandora_solr_query->solrParams['fq'][] = $islandora_solr_query->solrQuery;
 	$islandora_solr_query->internalSolrQuery = '*:*';
 	$islandora_solr_query->solrQuery = '';
-	dsm($islandora_solr_query);
+	// dsm($islandora_solr_query);
 }
 
 // !!
