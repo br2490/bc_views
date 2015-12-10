@@ -1,37 +1,178 @@
 <?php
 
 /**
+ * Implements hook_node_info().
+ */
+function bc_views_node_info() {
+  $items = array(
+    'bc_views_solr_view' => array(
+      'name' => t('Barnard Collection View'),
+      'base' => 'node_content',
+      'description' => t('A content type to configure and display a collection by a specifying a SOLR query. <em>Collection</em> here is used loosely, as these pages could be curated exhibits, special projects, timely (or time-based) collections, etc.  '),
+      'has_title' => '1',
+      'title_label' => t('Collection Name'),
+      'help' => t('The title of the collection, displayed at the top of the page.'),
+    ),
+  );
+  drupal_alter('node_info', $items);
+  return $items;
+}
+
+/**
+ * Implements hook_node_type_insert().
+ */
+function bc_views_node_type_insert($info) {
+  dsm('Function hit: node type insert');
+  dsm($info->type);
+  //if ($info->type == 'node_example') {
+ // field_create_field()
+
+}
+
+
+function _bc_views_node_type_insert() {
+  $field_bases = array();
+
+  $field_bases['bc_view_solr_query'] = array(
+    'active' => 1,
+    'cardinality' => 1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'bc_view_solr_query',
+    'indexes' => array(
+      'format' => array(
+        0 => 'format',
+      ),
+    ),
+    'locked' => 0,
+    'module' => 'text',
+    'settings' => array(),
+    'translatable' => 0,
+    'type' => 'text_long',
+  );
+
+  return $field_bases;
+}
+
+/**
+ * Implements hook_field_default_field_instances().
+ */
+function _bc_views_field_default_field_instances() {
+  $field_instances = array();
+
+  $field_instances['node-bc_views-body'] = array(
+    'bundle' => 'bc_views',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => ''
+,    'display' => array(
+      'default' => array(
+        'label' => 'hidden',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 0,
+      ),
+      'teaser' => array(
+        'label' => 'hidden',
+        'module' => 'text',
+        'settings' => array(
+          'trim_length' => 600,
+        ),
+        'type' => 'text_summary_or_trimmed',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'body',
+    'label' => t('Body'),
+    'required' => FALSE,
+    'settings' => array(
+      'display_summary' => TRUE,
+      'text_processing' => 1,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'module' => 'text',
+      'settings' => array(
+        'rows' => 20,
+        'summary_rows' => 5,
+      ),
+      'type' => 'text_textarea_with_summary',
+      'weight' => 2,
+    ),
+  );
+
+  $field_instances['node-bc_views-field_solr_query'] = array(
+    'bundle' => 'bc_views',
+    'default_value' => array(
+      0 => array(
+        'value' => '\'RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/islandora:bookCollection"\'',
+      ),
+    ),
+    'deleted' => 0,
+    'description' => t('A raw SOLR query that will generate desired \'collection view.\' This field <em>must be</em> URL encoded where appropriate.
+An easy way to create this question is to visit the <a href="islandora/search">search page</a> and start with a basic query. The URL bar will display the encoded query string. 
+<em>You are not restricted to the SOLR search fields available to a site visitor.</em>
+Examples: 
+<ul>
+<li>\'mods_relatedItem_host_titleInfo_title_ms%3A"Mortarboard" AND RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/islandora:bookCollection"\' (i.e. Yearbooks!)</li>
+<li>\'mods_genre_ms%3A"photographs"\' (i.e. Photographs!)</li>
+</ul>'),
+    'display' => array(
+      'default' => array(
+        'label' => 'hidden',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 1,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'bc_view_solr_query',
+    'label' => t('SOLR Query'),
+    'required' => 1,
+    'settings' => array(
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'rows' => 2,
+      ),
+      'type' => 'text_textarea',
+      'weight' => 1,
+    ),
+  );
+  return $field_instances;
+}
+
+function bc_view_node_view($node, $view_mode, $langcode) {
+  // $node->content['my_additional_field'] = array(
+  //   '#markup' => $additional_field,
+  //   '#weight' => 10,
+  //   '#theme' => 'mymodule_my_additional_field',
+  // );
+}
+
+/**
  * Implements hook_block_info().
  */
 function bc_views_block_info() {
- 	$blocks['bc_views_Yearbook'] = array( 
- 		'info' => t('SOLR Collection for the Annual and Mortarboard (yearbook).'),
+ 	$blocks['bc_views_solr_query_results'] = array( 
+ 		'info' => t('Barnard Custom View'),
  		'status' => TRUE,
 		'region' => 'content',
 		'visibility' => BLOCK_VISIBILITY_LISTED,
-		'pages' => 'yearbook2',
+		'pages' => 'thisWillBeCode',
  	);
-	$blocks['bc_views_Newspaper'] = array( 
-		'info' => t('SOLR Collection for the Barnard Bulletin (newspaper).'),
-		'status' => TRUE,
-		'region' => 'content',
-		'visibility' => BLOCK_VISIBILITY_LISTED,
-		'pages' => 'newspaper2',
-	);
-	$blocks['bc_views_StudentPubs'] = array( 
-		'info' => t('SOLR Collection for Student Publications.'),
-		'status' => TRUE,
-		'region' => 'content',
-		'visibility' => BLOCK_VISIBILITY_LISTED,
-		'pages' => 'studentpubs2',
-	);
-	$blocks['bc_views_Photos'] = array( 
-		'info' => t('SOLR Collection for Photos.'),
-		'status' => TRUE,
-		'region' => 'content',
-		'visibility' => BLOCK_VISIBILITY_LISTED,
-		'pages' => 'photos2',
-	);
  	return $blocks;
 }
 
@@ -53,7 +194,7 @@ function bc_views_block_view($delta = '') {
 	switch ($delta) {
 
 		// Yearbook View
-		case 'bc_views_Yearbook' :
+		case 'bc_views_solr_query_results' :
 			blockDefaultView();
 			
 			$query = 'mods_relatedItem_host_titleInfo_title_ms%3A"Mortarboard" AND RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/islandora:bookCollection"';
@@ -65,57 +206,13 @@ function bc_views_block_view($delta = '') {
 			$block['content'] = $sortBlock . $switchBlock;			
 			$block['content'] .= $solrResultContent;
 		break;
-
-		// Barnard Bulletin View
-		case 'bc_views_Newspaper';
-			blockDefaultView();
-
-			$collectionPID = variable_get('bc_islandora_newspaper_pid', 'islandora:74');
-			$query = 'RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/'.$collectionPID.'"';
-			$solrResultContent = islandora_solr($query, NULL);
-
-			$switchBlock = blockContentRenderer('islandora_solr', 'display_switch');
-			$sortBlock = blockContentRenderer('islandora_solr', 'sort');
-
-			$block['content'] = $sortBlock . $switchBlock;
-			$block['content'] .= $solrResultContent;
-		break;
-
-		// Student Publications View
-		case 'bc_views_StudentPubs';
-			blockDefaultView(); 
-
-			$collectionPID = variable_get('bc_islandora_pubs_pid', 'islandora:1022');
-			$query = 'RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/'.$collectionPID.'"';
-			$solrResultContent = islandora_solr($query, NULL);
-
-			$switchBlock = blockContentRenderer('islandora_solr', 'display_switch');
-			$sortBlock = blockContentRenderer('islandora_solr', 'sort');
-
-			$block['content'] = $sortBlock . $switchBlock;
-			$block['content'] .= $solrResultContent;
-		break;
-
-		// Photographs View
-		case 'bc_views_Photos';
-			blockDefaultView();
-			
-			$query = 'mods_genre_ms%3A"photographs"';
-			$solrResultContent = islandora_solr($query, NULL);
-
-			$switchBlock = blockContentRenderer('islandora_solr', 'display_switch');
-			$sortBlock = blockContentRenderer('islandora_solr', 'sort');
-
-			$block['content'] = $sortBlock . $switchBlock;
-			$block['content'] .= $solrResultContent;
-		break;
 	}
 	return $block;
 }
 
 function bc_views_menu_breadcrumb_alter(&$active_trail, $item) {
-	dsm($active_trail);
-	dsm($item);
+	// dsm($active_trail);
+	// dsm($item);
 }
 
 function bc_views_block_list_alter(&$blocks) {
