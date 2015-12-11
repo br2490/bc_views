@@ -1,0 +1,142 @@
+<?php
+/**
+ * Implements hook_install().
+ */
+function bc_views_install() {
+  node_types_rebuild();
+  $types = node_type_get_types();
+  node_add_body_field($types['bc_views_solr_view']);
+	add_custom_fields();
+	dsm('Installed');
+}
+
+function add_custom_fields() {
+  foreach (_bc_views_installed_fields() as $field) {
+    field_create_field($field);
+  }
+  foreach (_bc_views_installed_instances() as $fieldinstance) {
+    dsm($fieldinstance);
+    field_create_instance($fieldinstance);
+  }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function bc_views_uninstall() {
+  $node_name = 'bc_views_solr_view';
+  $sql = 'SELECT nid FROM {node} n WHERE n.type = :type';
+  $result = db_query($sql, array(':type' => $node_name));
+  $nids = array();
+  foreach ($result as $row) {
+    $nids[] = $row->nid;
+  }
+  node_delete_multiple($nids);
+  delete_custom_fields();
+	node_type_delete($node_name);
+  field_purge_batch(1000);
+	dsm('Uninstalled');
+}
+
+function delete_custom_fields() {
+	$node_name = 'bc_views_solr_view';
+  foreach (array_keys(_bc_views_installed_fields()) as $field) {
+    field_delete_field($field);
+  }
+  $instances = field_info_instances('node', $node_name);
+  foreach ($instances as $instance_name => $fieldinstance) {
+    field_delete_instance($fieldinstance);
+  }
+}
+
+/**
+ * BEGIN FIELDS AND INSTANCES
+ */
+
+function _bc_views_installed_fields() {
+	$fields = array();
+
+  $fields['bc_views_solr_query'] = array(
+    'active' => 1,
+    'cardinality' => 1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'bc_views_solr_query',
+    'indexes' => array(
+      'format' => array(
+        0 => 'format',
+      ),
+    ),
+    'locked' => 0,
+    'module' => 'text',
+    'settings' => array(),
+    'translatable' => 0,
+    'type' => 'text_long',
+  );
+
+  return $fields;
+}
+
+function _bc_views_installed_instances() {
+  $instances = array();
+  
+ 	$instances['bc_views_solr_query'] = array(
+    'bundle' => 'bc_views_solr_view',
+    'field_name' => 'bc_views_solr_query',
+    'type' => 'text',
+    'label' => 'SOLR Query',
+		'default_value' => array(
+		  0 => array(
+		    'value' => '\'mods_relatedItem_host_titleInfo_title_ms%3A"Mortarboard" AND RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/islandora:bookCollection"\'',
+		  ),
+		),
+		'deleted' => 0,
+    'description' => 'A raw SOLR query that will generate desired \'collection view.\' <br>
+    This field <em>must be</em> URL encoded where appropriate. <br>
+An easy way to create this question is to visit the <a href="islandora/search">search page</a> and start with a basic query. <br>
+The URL bar will display the encoded query string. <em>Note: You are not restricted to the SOLR search fields available to a site visitor.</em> <br>
+Examples: 
+<ul>
+<li>Get all yearbooks by mods title AND only display their cover (by collection type): \'mods_relatedItem_host_titleInfo_title_ms%3A"Mortarboard" AND RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/islandora:bookCollection"\'</li>
+<li>Get all photographs using mods: \'mods_genre_ms%3A"photographs"\'</li>
+</ul>',
+    'display' => array(
+      'default' => array(
+        'label' => 'hidden',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 1,
+      ),
+      'teaser' => array(
+        'label' => 'hidden',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 1,
+      ),
+    ),
+    'entity_type' => 'node',
+    'required' => 1,
+    'settings' => array(
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'rows' => 2,
+      ),
+      'type' => 'text_textarea',
+      'weight' => 1,
+    ),
+  );
+
+  return $instances;
+}
+
+/*
+
+*/
+
+
+?>
