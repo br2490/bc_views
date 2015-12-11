@@ -55,6 +55,7 @@ function delete_custom_fields() {
 
 function _bc_views_installed_fields() {
 	$fields = array();
+  $t = get_t();
 
   $fields['bc_views_solr_query'] = array(
     'active' => 1,
@@ -62,6 +63,7 @@ function _bc_views_installed_fields() {
     'deleted' => 0,
     'entity_types' => array(),
     'field_name' => 'bc_views_solr_query',
+    'label' => $t('A raw SOLR query that will generate desired \'collection view.\''),
     'indexes' => array(
       'format' => array(
         0 => 'format',
@@ -79,39 +81,40 @@ function _bc_views_installed_fields() {
 
 function _bc_views_installed_instances() {
   $instances = array();
-  
- 	$instances['bc_views_solr_query'] = array(
+  $t = get_t();
+
+  $instances['bc_views_solr_query'] = array(
     'bundle' => 'bc_views_solr_view',
     'field_name' => 'bc_views_solr_query',
     'type' => 'text',
-    'label' => 'SOLR Query',
+    'label' => $t('SOLR Query'),
 		'default_value' => array(
 		  0 => array(
-		    'value' => '\'mods_relatedItem_host_titleInfo_title_ms%3A"Mortarboard" AND RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/islandora:bookCollection"\'',
+		    'value' => $t('RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/bc:barnard-literary-magazine"'),
 		  ),
 		),
 		'deleted' => 0,
-    'description' => 'A raw SOLR query that will generate desired \'collection view.\' <br>
+    'description' => $t('A raw SOLR query that will generate desired \'collection view.\' <br>
     This field <em>must be</em> URL encoded where appropriate. <br>
 An easy way to create this question is to visit the <a href="islandora/search">search page</a> and start with a basic query. <br>
 The URL bar will display the encoded query string. <em>Note: You are not restricted to the SOLR search fields available to a site visitor.</em> <br>
 Examples: 
 <ul>
-<li>Get all yearbooks by mods title AND only display their cover (by collection type): \'mods_relatedItem_host_titleInfo_title_ms%3A"Mortarboard" AND RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/islandora:bookCollection"\'</li>
-<li>Get all photographs using mods: \'mods_genre_ms%3A"photographs"\'</li>
-</ul>',
+<li>Get all yearbooks by mods title AND only display their cover (by collection type): mods_relatedItem_host_titleInfo_title_ms%3A"Mortarboard" AND RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/islandora:bookCollection"</li>
+<li>Get all photographs using mods: mods_genre_ms%3A"photographs"</li>
+</ul>'),
     'display' => array(
       'default' => array(
         'label' => 'hidden',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 1,
+        'weight' => 2,
       ),
-      'teaser' => array(
+      'full' => array(
         'label' => 'hidden',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 1,
+        'weight' => 2,
       ),
     ),
     'entity_type' => 'node',
@@ -127,16 +130,11 @@ Examples:
         'rows' => 2,
       ),
       'type' => 'text_textarea',
-      'weight' => 1,
+      'weight' => 2,
     ),
   );
-
+  
   return $instances;
 }
-
-/*
-
-*/
-
 
 ?>

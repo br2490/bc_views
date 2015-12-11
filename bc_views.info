@@ -1,6 +1,6 @@
 name=Barnard College SOLR Collection View Modules (Development)
 description=Modules that define and display collections using SOLR, including facets and advanced searching.
-version=
+version=VERSION
 core=7.x
 package=Barnard College Custom Islandora
 files[] = bc_views.install

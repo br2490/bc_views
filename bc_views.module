@@ -22,8 +22,8 @@ function bc_views_node_info() {
  * Implement hook_form()
  */
 function bc_views_form($node, $form_state) {
-  dsm($node);
-  dsm($form_state);
+	dsm($node);
+	dsm($form_state);
   return node_content_form($node, $form_state);
 }
 
@@ -32,17 +32,39 @@ function bc_views_form($node, $form_state) {
  */
 function bc_views_node_type_insert($info) {
   if ($info->type == 'bc_views_solr_view') {
-    dsm('Function hit: node type insert');
-    dsm($info);
+  	// dsm($info); // looks good.
   }
 }
 
-function bc_view_node_view($node, $view_mode, $langcode) {
+function bc_views_node_view($node, $view_mode, $langcode) {
+	if ($node->type == 'bc_views_solr_view') {
+
+			$get_query = field_get_items('node', $node, 'bc_views_solr_query');
+			$query = $get_query[0]['value'];
+
+			blockDefaultView();
+			
+			$solrResultContent = islandora_solr($query, NULL);
+
+			//$switchBlock = blockContentRenderer('islandora_solr', 'display_switch');
+			//$sortBlock = blockContentRenderer('islandora_solr', 'sort');
+
+			$node->content['results'] = array(
+				'#markup' => $solrResultContent,
+				'weight' => '11',
+				);
+
+			dsm($node);
+	}
   // $node->content['my_additional_field'] = array(
   //   '#markup' => $additional_field,
   //   '#weight' => 10,
   //   '#theme' => 'mymodule_my_additional_field',
   // );
+}
+
+function bc_views_node_view_alter(&$build) {
+	// dsm($build);
 }
 
 /**
@@ -54,7 +76,7 @@ function bc_views_block_info() {
  		'status' => TRUE,
 		'region' => 'content',
 		'visibility' => BLOCK_VISIBILITY_LISTED,
-		'pages' => 'thisWillBeCode',
+		'pages' => '',
  	);
  	return $blocks;
 }
@@ -86,7 +108,7 @@ function bc_views_block_view($delta = '') {
 			$switchBlock = blockContentRenderer('islandora_solr', 'display_switch');
 			$sortBlock = blockContentRenderer('islandora_solr', 'sort');
 
-			$block['content'] = $sortBlock . $switchBlock;			
+			$block['content'] .= $sortBlock . $switchBlock;			
 			$block['content'] .= $solrResultContent;
 		break;
 	}
