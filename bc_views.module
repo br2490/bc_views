@@ -22,8 +22,6 @@ function bc_views_node_info() {
  * Implement hook_form()
  */
 function bc_views_form($node, $form_state) {
-	dsm($node);
-	dsm($form_state);
   return node_content_form($node, $form_state);
 }
 
@@ -32,12 +30,14 @@ function bc_views_form($node, $form_state) {
  */
 function bc_views_node_type_insert($info) {
   if ($info->type == 'bc_views_solr_view') {
-  	// dsm($info); // looks good.
+  	dsm('node-type-insert');
+  	dsm($info);
   }
 }
 
 function bc_views_node_view($node, $view_mode, $langcode) {
 	if ($node->type == 'bc_views_solr_view') {
+			//islandoraBlocks();
 
 			$get_query = field_get_items('node', $node, 'bc_views_solr_query');
 			$query = $get_query[0]['value'];
@@ -51,7 +51,7 @@ function bc_views_node_view($node, $view_mode, $langcode) {
 
 			$node->content['results'] = array(
 				'#markup' => $solrResultContent,
-				'weight' => '11',
+				'weight' => '2',
 				);
 
 			dsm($node);
@@ -64,7 +64,7 @@ function bc_views_node_view($node, $view_mode, $langcode) {
 }
 
 function bc_views_node_view_alter(&$build) {
-	// dsm($build);
+	dsm($build);
 }
 
 /**
@@ -121,19 +121,19 @@ function bc_views_menu_breadcrumb_alter(&$active_trail, $item) {
 }
 
 function bc_views_block_list_alter(&$blocks) {
-	foreach ($blocks as $block) {
-		if ($block->module == 'bc_views') {
-			// SIDEBAR 1 CONTENT
-			$facets = block_load('islandora_solr', 'basic_facets');
-			$facets->theme=$GLOBALS['theme'];
-			$advanced = block_load('islandora_solr', 'advanced');
-			$advanced->theme=$GLOBALS['theme'];
-			$blocks[] = $facets;
-			$blocks[] = $advanced;
-			// dsm($blocks);
-			return; // die
-		}
+	
+	// dsm($GLOBALS['_islandora_solr_queryclass']);
+
+	if ($GLOBALS['_islandora_solr_queryclass']->solrParams['bc_views']) {
+		// SIDEBAR 1 CONTENT
+		$facets = block_load('islandora_solr', 'basic_facets');
+		$facets->theme=$GLOBALS['theme'];
+		$advanced = block_load('islandora_solr', 'advanced');
+		$advanced->theme=$GLOBALS['theme'];
+		$blocks[] = $facets;
+		$blocks[] = $advanced;
 	}
+	dsm($blocks);
 }
 
 function blockDefaultView() {
@@ -183,6 +183,7 @@ function bc_views_islandora_solr_query_alter(&$islandora_solr_query) {
 	$islandora_solr_query->solrParams['fq'][] = $islandora_solr_query->solrQuery;
 	$islandora_solr_query->internalSolrQuery = '*:*';
 	$islandora_solr_query->solrQuery = '';
+	$islandora_solr_query->solrParams['bc_views'] = TRUE;
 	// dsm($islandora_solr_query);
 }
 
