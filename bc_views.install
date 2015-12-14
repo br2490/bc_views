@@ -5,9 +5,8 @@
 function bc_views_install() {
   node_types_rebuild();
   $types = node_type_get_types();
-  node_add_body_field($types['bc_views_solr_view']);
+  node_add_body_field($types['bc_views_solr_view'], 'Collection Description');
 	add_custom_fields();
-	dsm('Installed');
 }
 
 function add_custom_fields() {
@@ -96,7 +95,7 @@ function _bc_views_installed_instances() {
 		'deleted' => 0,
     'description' => $t('A raw SOLR query that will generate desired \'collection view.\' <br>
     This field <em>must be</em> URL encoded where appropriate. <br>
-An easy way to create this question is to visit the <a href="islandora/search">search page</a> and start with a basic query. <br>
+An easy way to create this question is to visit the <a href="'.$GLOBALS['base_root'].'/islandora/search">search page</a> and start with a basic query. <br>
 The URL bar will display the encoded query string. <em>Note: You are not restricted to the SOLR search fields available to a site visitor.</em> <br>
 Examples: 
 <ul>

@@ -8,10 +8,11 @@ function bc_views_node_info() {
     'bc_views_solr_view' => array(
       'name' => t('Barnard Collection View'),
       'base' => 'node_content',
-      'description' => t('A content type to configure and display a collection by a specifying a SOLR query. <em>Collection</em> here is used loosely, as these pages could be curated exhibits, special projects, timely (or time-based) collections, etc.  '),
+      'description' => t('A content type to configure and display a collection by a specifying a SOLR query. <em>Collection</em> here is used loosely, as these pages may be curated exhibits, special projects, timely (or time-based) collections, etc.  '),
       'has_title' => '1',
-      'title_label' => t('Collection Name'),
-      'help' => t('The title of the collection, displayed at the top of the page.'),
+      'title_label' => t('Collection Name (Page Name)'),
+      'help' => t('Use this page to configure and display a collection by a specifying a SOLR query. <em>Collection</em> here is used loosely, as these pages may be curated exhibits, special projects, timely (or time-based) collections, etc. <br> Use the <strong>Preview</strong> button to preview what the page will look like with results from the SOLR query your specified.'),
+      'custom' => '0',
     ),
   );
   drupal_alter('node_info', $items);
@@ -30,130 +31,162 @@ function bc_views_form($node, $form_state) {
  */
 function bc_views_node_type_insert($info) {
   if ($info->type == 'bc_views_solr_view') {
-  	dsm('node-type-insert');
+  	dsm('node-type-insert->BC_VIEWS!');
   	dsm($info);
   }
 }
 
-function bc_views_node_view($node, $view_mode, $langcode) {
+function bc_views_node_view($node, $view_mode = 'full', $langcode = NULL) {
 	if ($node->type == 'bc_views_solr_view') {
-			//islandoraBlocks();
 
-			$get_query = field_get_items('node', $node, 'bc_views_solr_query');
-			$query = $get_query[0]['value'];
+		// Fetch the query from the node. 
+		// TO DO: Add some logic here
+		$get_query = field_get_items('node', $node, 'bc_views_solr_query');
+		$query = $get_query[0]['value'];
 
-			blockDefaultView();
-			
-			$solrResultContent = islandora_solr($query, NULL);
+		// Set the pref. view mode for the page (grid)
+		block_default_view_preference();
+	
+		// Send the SOLR query and prepare to display them. We _alter this query below.
+		// very seriously contemplating ditching the islandora_solr and just doing a real SQ... I wouldn't need to hook alter or anything ~ and hopefully the blocks that rely on islandora_solr can be fooled into thinking it was called... or I can just call it in the background, but then I'm doubling and defeating the purpose of being lightweight... </train of thought>
 
-			//$switchBlock = blockContentRenderer('islandora_solr', 'display_switch');
-			//$sortBlock = blockContentRenderer('islandora_solr', 'sort');
+		$solrResultContent = islandora_solr($query, NULL);
 
-			$node->content['results'] = array(
-				'#markup' => $solrResultContent,
-				'weight' => '2',
-				);
+		// Build the rest of our block's content - include the switch (list/grid) and sort blocks.
+		$node->content['switch_block'] = array(
+			'#markup' => block_content_render('islandora_solr', 'display_switch'),
+			'#weight' => '1',	// DO WE WANT THESE ON THE SAME LINE?!
+			);
+		$node->content['sort_order_block'] = array(
+			'#markup' => block_content_render('islandora_solr', 'sort'),
+			'#weight' => '1', // DO WE WANT THESE ON THE SAME LINE?! (YES, BEN SAYS YES!)
+			);
+		$node->content['results'] = array(
+			'#markup' => $solrResultContent,
+			'#weight' => '5',
+			);
 
-			dsm($node);
+		// dsm($node);
 	}
-  // $node->content['my_additional_field'] = array(
-  //   '#markup' => $additional_field,
-  //   '#weight' => 10,
-  //   '#theme' => 'mymodule_my_additional_field',
-  // );
 }
 
 function bc_views_node_view_alter(&$build) {
-	dsm($build);
+	// dsm($build);
 }
 
-/**
- * Implements hook_block_info().
- */
-function bc_views_block_info() {
- 	$blocks['bc_views_solr_query_results'] = array( 
- 		'info' => t('Barnard Custom View'),
- 		'status' => TRUE,
-		'region' => 'content',
-		'visibility' => BLOCK_VISIBILITY_LISTED,
-		'pages' => '',
- 	);
- 	return $blocks;
-}
+// /**
+//  * Implements hook_block_info().
+//  */
+// function bc_views_block_info() {
+//  	$blocks['bc_views_solr_query_results'] = array( 
+//  		'info' => t('Barnard Custom View'),
+//  		'status' => TRUE,
+// 		'region' => 'content',
+// 		'visibility' => BLOCK_VISIBILITY_LISTED,
+// 		'pages' => '',
+//  	);
+//  	return $blocks;
+// }
 
-/**
- * Implements hook_block_save(). (UNUSED AT PRESENT)
- */
-function bc_views_block_save($delta = '', $edit = array()) {
-	$prefix = 'bc_views';
-	if (stripos($delta, $prefix) !== FALSE) {
-		dsm($edit);
-	}
-}
+// /**
+//  * Implements hook_block_save(). (UNUSED AT PRESENT)
+//  */
+// function bc_views_block_save($delta = '', $edit = array()) {
+// 	$prefix = 'bc_views';
+// 	if (stripos($delta, $prefix) !== FALSE) {
+// 		dsm($edit);
+// 	}
+// }
 
-/**
- * Implements hook_block_view().
- */
-function bc_views_block_view($delta = '') {
-	$block = array();
-	switch ($delta) {
+// /**
+//  * Implements hook_block_view().
+//  */
+// function bc_views_block_view($delta = '') {
+// 	$block = array();
+// 	switch ($delta) {
 
-		// Yearbook View
-		case 'bc_views_solr_query_results' :
-			blockDefaultView();
+// 		// Yearbook View
+// 		case 'bc_views_solr_query_results' :
+// 			block_default_view_preference();
 			
-			$query = 'mods_relatedItem_host_titleInfo_title_ms%3A"Mortarboard" AND RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/islandora:bookCollection"';
-			$solrResultContent = islandora_solr($query, NULL);
+// 			$query = 'mods_relatedItem_host_titleInfo_title_ms%3A"Mortarboard" AND RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/islandora:bookCollection"';
+// 			$solrResultContent = islandora_solr($query, NULL);
 
-			$switchBlock = blockContentRenderer('islandora_solr', 'display_switch');
-			$sortBlock = blockContentRenderer('islandora_solr', 'sort');
+// 			$switchBlock = block_content_render('islandora_solr', 'display_switch');
+// 			$sortBlock = block_content_render('islandora_solr', 'sort');
 
-			$block['content'] .= $sortBlock . $switchBlock;			
-			$block['content'] .= $solrResultContent;
-		break;
-	}
-	return $block;
-}
+// 			$block['content'] .= $sortBlock . $switchBlock;			
+// 			$block['content'] .= $solrResultContent;
+// 		break;
+// 	}
+// 	return $block;
+// }
 
+
+// UNUSED AT PRESENT
 function bc_views_menu_breadcrumb_alter(&$active_trail, $item) {
 	// dsm($active_trail);
 	// dsm($item);
 }
 
+/*
+ * Implements hook_block_list_alter().
+ */
 function bc_views_block_list_alter(&$blocks) {
-	
-	// dsm($GLOBALS['_islandora_solr_queryclass']);
-
-	if ($GLOBALS['_islandora_solr_queryclass']->solrParams['bc_views']) {
-		// SIDEBAR 1 CONTENT
-		$facets = block_load('islandora_solr', 'basic_facets');
-		$facets->theme=$GLOBALS['theme'];
-		$advanced = block_load('islandora_solr', 'advanced');
-		$advanced->theme=$GLOBALS['theme'];
-		$blocks[] = $facets;
-		$blocks[] = $advanced;
+	// I've set a variable in the SOLR query that specifies that it is unique. 
+	// If it is not one of our UNIQUE queries, return;
+	if (!$GLOBALS['_islandora_solr_queryclass']->solrParams['bc_views']) {
+		return;
 	}
-	dsm($blocks);
+
+	// Find the display_switch block that, for some unknown reason, is displayed on all pages on our site (or by default)
+	// We do not want *this* display_switch block, since we've already render and add it to our pages ['content']!
+	foreach($blocks as $block) {
+		if($block->delta == 'display_switch') {
+			unset($blocks[$block->bid]);
+		}
+	}
+
+	/*
+	 * ~~~~ SIDEBAR FIRST CONTENT ~~~~~
+	 * We're going to add our sidebar content, mainly the *facet block* and *advanced search block* 
+	 * Both of these are from the islandora_solr module.
+	 *
+	 * Though by default they _should_ display on SIDEBAR1, we're going to enforce that here.
+	 * We're also going to ensure it users our GLOBAL theme... I'm not 100% if this is ness...
+	 */
+	$theme = $GLOBALS['theme'];
+	$region = 'sidebar_first';
+
+	$facets = block_load('islandora_solr', 'basic_facets');
+	$facets->theme = $theme;
+	$facets->region = $region;
+	
+	$advanced = block_load('islandora_solr', 'advanced');
+	$advanced->theme = $theme;
+	$advanced->region = $region;
+
+	// SEND IN THE BLOOOOCCCKKKSSS! 
+	$blocks[] = $facets;
+	$blocks[] = $advanced;
 }
 
-function blockDefaultView() {
-	// this should be a variable lookup eventually.
-	// vget whatever, default=>'grid';
+function block_default_view_preference() {
+	// This should be a configurable option for the person designing the content page.
 	if (!$_GET['display']) { $_GET['display']='grid'; }
 }
 
-// Generates a rendered block from $module with name $functionName.
-function blockContentRenderer($module, $functionName) {
-	$getBlock = block_load($module, $functionName);
-	$getBlock->theme = $GLOBALS['theme'];
-	$blockRenderBlock = _block_render_blocks(array($getBlock));
-	$blockRenderBuild = _block_get_renderable_array($blockRenderBlock);
-	$blockRendered = drupal_render($blockRenderBuild);
-	return $blockRendered;
+// Generates a rendered block from $module with name $function.
+function block_content_render($module, $function) {
+	$block = block_load($module, $function);
+	$block->theme = $GLOBALS['theme'];
+	$render_block = _block_render_blocks(array($block));
+	$build_block = _block_get_renderable_array($render_block);
+	return drupal_render($build_block);
 }
 
-// Reports all islandora blocks available... I'm lazy.
-function islandoraBlocks() {
+// Reports all islandora blocks available... I'm so lazy.
+function dsm_all_islandora_blocks() {
 	$islandoraBlocks = module_invoke('islandora_solr', 'block_info');
 	dsm($islandoraBlocks);
 }
@@ -167,16 +200,29 @@ function islandoraBlocks() {
 // function bc_views_islandora_solr_query($islandora_solr_query) {
 // }
 
+/* We will want to alter these facet fields too, once we add the option to the content page of which to display...
+->solrParams['facet.field']
+	1 (String, 21 characters ) mods_subject_topic_ms
+	2 (String, 13 characters ) mods_genre_ms
+	3 (String, 38 characters ) mods_subject_name_personal_namePart_ms
+	4 (String, 39 characters ) mods_subject_name_corporate_namePart_ms
+	5 (String, 30 characters ) mods_name_personal_namePart_ms
+	6 (String, 31 characters ) mods_name_corporate_namePart_ms
+	7 (String, 40 characters ) mods_relatedItem_host_titleInfo_title_ms
+	8 (String, 42 characters ) mods_relatedItem_series_titleInfo_title_ms
+*/
+
 /**
  * Implements hook_islandora_solr_query_alter().
  * Using this hook to switch around the actual SOLR query: q = fq and iq = *:* so q = isempty();
  */
 function bc_views_islandora_solr_query_alter(&$islandora_solr_query) {
 	// If we're on an islandora/search page don't modify the query.
-	// Reduce nesting.
+	// Reduce nesting, quickly exit.
 	if (strpos(request_path(),'islandora/search/') !== FALSE) {
-		return; //die
+		return;
 	} 
+
 	// Otherwise assume we're on one of our custom landing pages (this is a dangerous assumption but it works for now)
 	// Something to think about: leave solr_query alone unless has no matching solr configuration. 
 	$islandora_solr_query->solrLimit = '8'; // WHY DO YOU DISRESPECT THIS VARIABLE?! WHY!?!?!?!?!?!?!
@@ -184,7 +230,7 @@ function bc_views_islandora_solr_query_alter(&$islandora_solr_query) {
 	$islandora_solr_query->internalSolrQuery = '*:*';
 	$islandora_solr_query->solrQuery = '';
 	$islandora_solr_query->solrParams['bc_views'] = TRUE;
-	// dsm($islandora_solr_query);
+	dsm($islandora_solr_query);
 }
 
 // !!
