@@ -89,18 +89,17 @@ function _bc_views_installed_instances() {
     'label' => $t('SOLR Query'),
 		'default_value' => array(
 		  0 => array(
-		    'value' => $t('RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/bc:barnard-literary-magazine"'),
+		    'value' => $t('RELS_EXT_isMemberOf_uri_ms:"info:fedora/bc:barnard-literary-magazine"'),
 		  ),
 		),
 		'deleted' => 0,
-    'description' => $t('A raw SOLR query that will generate desired \'collection view.\' <br>
-    This field <em>must be</em> URL encoded where appropriate. <br>
-An easy way to create this question is to visit the <a href="'.$GLOBALS['base_root'].'/islandora/search">search page</a> and start with a basic query. <br>
-The URL bar will display the encoded query string. <em>Note: You are not restricted to the SOLR search fields available to a site visitor.</em> <br>
+    'description' => $t('A SOLR query that will generate desired \'collection view.\' <br>
+    An easy way to create this question is to visit the <a href="'.$GLOBALS['base_root'].'/islandora/search">search page</a> and start with a basic query. <br>
+The URL bar will display the encoded query string. This will give you an idea of a query string. <em>Note: You are not restricted to the SOLR search fields available to a site visitor.</em> <br>
 Examples: 
 <ul>
-<li>Get all yearbooks by mods title AND only display their cover (by collection type): mods_relatedItem_host_titleInfo_title_ms%3A"Mortarboard" AND RELS_EXT_isMemberOf_uri_ms%3A"info:fedora/islandora:bookCollection"</li>
-<li>Get all photographs using mods: mods_genre_ms%3A"photographs"</li>
+<li>Get all yearbooks by mods title AND only display their cover (by collection type): mods_relatedItem_host_titleInfo_title_ms:"Mortarboard" AND RELS_EXT_isMemberOf_uri_ms:"info:fedora/islandora:bookCollection"</li>
+<li>Get all photographs using mods: mods_genre_ms:"photographs"</li>
 </ul>'),
     'display' => array(
       'default' => array(
