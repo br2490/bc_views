@@ -242,6 +242,42 @@ Examples:
     ),
   );
 
+$instances['bc_views_query_facets'] = array(
+    'bundle' => 'bc_views_solr_view',
+    'field_name' => 'bc_views_query_facets',
+    'type' => 'options_buttons',
+    'label' => $t('Facets to display on page.'),
+    'default_value' => array(
+      _solr_facet_fields(),
+    ),
+    'deleted' => 0,
+    'description' => $t('Facets to display on page.'),
+    'entity_type' => 'node',
+    'required' => 1,
+    'settings' => array(
+      'allowed_values' => _solr_facet_fields(),
+    ),
+    // 'widget' => array(
+    //   'active' => 1,
+    //   'module' => 'options',
+    //   'type' => 'options_buttons',
+    // ),
+    'display' => array(
+      'default' => array(
+        'label' => 'hidden',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 3,
+      ),
+      'full' => array(
+        'label' => 'hidden',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 3,
+      ),
+    ),
+  );
+
   return $instances;
 }
 
