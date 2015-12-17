@@ -4,20 +4,21 @@
  */
 function bc_views_install() {
   node_types_rebuild();
-  $types = node_type_get_types();
-  node_add_body_field($types['bc_views_solr_view'], 'Collection Description');
 	add_custom_fields();
 }
 
 function add_custom_fields() {
   foreach (_bc_views_installed_fields() as $field) {
     field_create_field($field);
+    dsm(field_info_field($field['field_name']));
   }
+  
   foreach (_bc_views_installed_instances() as $fieldinstance) {
-    dsm($fieldinstance);
     field_create_instance($fieldinstance);
+    dsm(field_info_instance('node', $fieldinstance['field_name'], 'bc_views_solr_view'));
   }
 }
+
 
 /**
  * Implements hook_uninstall().
@@ -34,7 +35,6 @@ function bc_views_uninstall() {
   delete_custom_fields();
 	node_type_delete($node_name);
   field_purge_batch(1000);
-	dsm('Uninstalled');
 }
 
 function delete_custom_fields() {
@@ -54,25 +54,57 @@ function delete_custom_fields() {
 
 function _bc_views_installed_fields() {
 	$fields = array();
-  $t = get_t();
 
-  $fields['bc_views_solr_query'] = array(
+  $fields['body'] = array(
+    'entity_types' => array('node'),
+    'translatable' => 0,
+    'settings' => array(),
+    'field_name' => 'body',
+    'type' => 'text_long',
+    'module' => 'text',
     'active' => 1,
+    'locked' => 0,
     'cardinality' => 1,
     'deleted' => 0,
-    'entity_types' => array(),
-    'field_name' => 'bc_views_solr_query',
-    'label' => $t('A raw SOLR query that will generate desired \'collection view.\''),
-    'indexes' => array(
-      'format' => array(
-        0 => 'format',
-      ),
-    ),
-    'locked' => 0,
-    'module' => 'text',
-    'settings' => array(),
+  );
+
+  $fields['bc_views_solr_query'] = array(
+    'entity_types' => array('node'),
     'translatable' => 0,
+    'settings' => array(),
+    'field_name' => 'bc_views_solr_query',
     'type' => 'text_long',
+    'module' => 'text',
+    'active' => 1,
+    'locked' => 0,
+    'cardinality' => 1,
+    'deleted' => 0,
+  );
+
+  $fields['bc_views_query_rows'] = array(
+    'entity_types' => array('node'),
+    'translatable' => 0,
+    'settings' => array(),
+    'field_name' => 'bc_views_query_rows',
+    'type' => 'text',
+    'module' => 'text',
+    'active' => 1,
+    'locked' => 0,
+    'cardinality' => 1,
+    'deleted' => 0,
+  );
+
+  $fields['bc_views_query_facets'] = array(
+    'entity_types' => array('node'),
+    'translatable' => 0,
+    'settings' => array(),
+    'field_name' => 'bc_views_query_facets',
+    'type' => 'list_integer',
+    'module' => 'list',
+    'active' => 1,
+    'locked' => 0,
+    'cardinality' => 1,
+    'deleted' => 0,
   );
 
   return $fields;
@@ -81,6 +113,41 @@ function _bc_views_installed_fields() {
 function _bc_views_installed_instances() {
   $instances = array();
   $t = get_t();
+
+  $instances['body'] = array(
+    'bundle' => 'bc_views_solr_view',
+    'field_name' => 'body',
+    'type' => 'text',
+    'label' => $t('Collection Summary'),
+    'deleted' => 0,
+    'entity_type' => 'node',
+    'required' => 0,
+    'settings' => array(
+      'text_processing' => 0,
+      'user_register_form' => 0,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'rows' => 10,
+      ),
+      'type' => 'text_textarea',
+      'weight' => 1,
+    ),
+    'display' => array(
+      'default' => array(
+        'label' => 'hidden',
+        'settings' => array(),
+        'weight' => 1,
+      ),
+      'full' => array(
+        'label' => 'hidden',
+        'settings' => array(),
+        'weight' => 1,
+      ),
+    ),
+  );
 
   $instances['bc_views_solr_query'] = array(
     'bundle' => 'bc_views_solr_view',
@@ -94,27 +161,13 @@ function _bc_views_installed_instances() {
 		),
 		'deleted' => 0,
     'description' => $t('A SOLR query that will generate desired \'collection view.\' <br>
-    An easy way to create this question is to visit the <a href="'.$GLOBALS['base_root'].'/islandora/search">search page</a> and start with a basic query. <br>
-The URL bar will display the encoded query string. This will give you an idea of a query string. <em>Note: You are not restricted to the SOLR search fields available to a site visitor.</em> <br>
+    An easy way to create this question is to visit the <a href="'.$GLOBALS['base_root'].'/islandora/search">search page</a> and start with a basic query.
+The URL bar will display the encoded query string. This will give you an idea of a query string.<br><strong><em>Note: You are not restricted to the SOLR search fields available to a site visitor.</em></strong><br>
 Examples: 
 <ul>
-<li>Get all yearbooks by mods title AND only display their cover (by collection type): mods_relatedItem_host_titleInfo_title_ms:"Mortarboard" AND RELS_EXT_isMemberOf_uri_ms:"info:fedora/islandora:bookCollection"</li>
+<li>Get all yearbooks by mods title AND only display their cover (by collection membership): mods_relatedItem_host_titleInfo_title_ms:"Mortarboard" AND RELS_EXT_isMemberOf_uri_ms:"info:fedora/islandora:bookCollection"</li>
 <li>Get all photographs using mods: mods_genre_ms:"photographs"</li>
 </ul>'),
-    'display' => array(
-      'default' => array(
-        'label' => 'hidden',
-        'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 2,
-      ),
-      'full' => array(
-        'label' => 'hidden',
-        'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 2,
-      ),
-    ),
     'entity_type' => 'node',
     'required' => 1,
     'settings' => array(
@@ -130,9 +183,80 @@ Examples:
       'type' => 'text_textarea',
       'weight' => 2,
     ),
+    'display' => array(
+      'default' => array(
+        'label' => 'hidden',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 2,
+      ),
+      'full' => array(
+        'label' => 'hidden',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 2,
+      ),
+    ),
   );
-  
+
+  $instances['bc_views_query_rows'] = array(
+    'bundle' => 'bc_views_solr_view',
+    'field_name' => 'bc_views_query_rows',
+    'type' => 'text',
+    'label' => $t('Results to display on page.'),
+    'default_value' => array(
+      0 => array(
+        'value' => $t('8'),
+      ),
+    ),
+    'deleted' => 0,
+    'description' => $t('The number of records (rows) to display from the SOLR query.'),
+    'entity_type' => 'node',
+    'required' => 1,
+    'settings' => array(
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'size' => 40,
+      ),
+      'type' => 'text',
+      'weight' => 3,
+    ),
+    'display' => array(
+      'default' => array(
+        'label' => 'hidden',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 3,
+      ),
+      'full' => array(
+        'label' => 'hidden',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 3,
+      ),
+    ),
+  );
+
   return $instances;
+}
+
+function _solr_facet_fields() {
+  // For whatever reason I can't find where these are specified, we're doing it live.
+  return array(
+    1 => 'mods_subject_topic_ms',
+    2 => 'mods_genre_ms',
+    3 => 'mods_subject_name_personal_namePart_ms',
+    4 => 'mods_subject_name_corporate_namePart_ms',
+    5 => 'mods_name_personal_namePart_ms',
+    6 => 'mods_name_corporate_namePart_ms',
+    7 => 'mods_relatedItem_host_titleInfo_title_ms',
+    8 => 'mods_relatedItem_series_titleInfo_title_ms',
+  );
 }
 
 ?>
