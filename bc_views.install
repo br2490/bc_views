@@ -5,17 +5,18 @@
 function bc_views_install() {
   node_types_rebuild();
 	add_custom_fields();
+  variable_set('comment_bc_views_solr_view', '0');
 }
 
 function add_custom_fields() {
   foreach (_bc_views_installed_fields() as $field) {
     field_create_field($field);
-    dsm(field_info_field($field['field_name']));
+    //dsm(field_info_field($field['field_name']));
   }
   
   foreach (_bc_views_installed_instances() as $fieldinstance) {
     field_create_instance($fieldinstance);
-    dsm(field_info_instance('node', $fieldinstance['field_name'], 'bc_views_solr_view'));
+    //dsm(field_info_instance('node', $fieldinstance['field_name'], 'bc_views_solr_view'));
   }
 }
 
@@ -63,7 +64,7 @@ function _bc_views_installed_fields() {
     'type' => 'text_long',
     'module' => 'text',
     'active' => 1,
-    'locked' => 0,
+    'locked' => 1,
     'cardinality' => 1,
     'deleted' => 0,
   );
@@ -76,7 +77,7 @@ function _bc_views_installed_fields() {
     'type' => 'text_long',
     'module' => 'text',
     'active' => 1,
-    'locked' => 0,
+    'locked' => 1,
     'cardinality' => 1,
     'deleted' => 0,
   );
@@ -89,7 +90,7 @@ function _bc_views_installed_fields() {
     'type' => 'text',
     'module' => 'text',
     'active' => 1,
-    'locked' => 0,
+    'locked' => 1,
     'cardinality' => 1,
     'deleted' => 0,
   );
@@ -97,13 +98,25 @@ function _bc_views_installed_fields() {
   $fields['bc_views_query_facets'] = array(
     'entity_types' => array('node'),
     'translatable' => 0,
-    'settings' => array(),
+    'settings' => array(
+      'allowed_values' => array(
+        'mods_subject_topic_ms' => 'mods_subject_topic_ms',
+        'mods_genre_ms' => 'mods_genre_ms',
+        'mods_subject_name_personal_namePart_ms' => 'mods_subject_name_personal_namePart_ms',
+        'mods_subject_name_corporate_namePart_ms' => 'mods_subject_name_corporate_namePart_ms',
+        'mods_name_personal_namePart_ms' => 'mods_name_personal_namePart_ms',
+        'mods_name_corporate_namePart_ms' => 'mods_name_corporate_namePart_ms',
+        'mods_relatedItem_host_titleInfo_title_ms' => 'mods_relatedItem_host_titleInfo_title_ms',
+        'mods_relatedItem_series_titleInfo_title_ms' => 'mods_relatedItem_series_titleInfo_title_ms',
+      ),
+      'allowed_values_function' => '',
+    ),
     'field_name' => 'bc_views_query_facets',
-    'type' => 'list_integer',
     'module' => 'list',
+    'type' => 'list_text',
     'active' => 1,
     'locked' => 0,
-    'cardinality' => 1,
+    'cardinality' => -1,
     'deleted' => 0,
   );
 
@@ -231,13 +244,13 @@ Examples:
         'label' => 'hidden',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 3,
+        'weight' => 2,
       ),
       'full' => array(
         'label' => 'hidden',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 3,
+        'weight' => 2,
       ),
     ),
   );
@@ -245,54 +258,48 @@ Examples:
 $instances['bc_views_query_facets'] = array(
     'bundle' => 'bc_views_solr_view',
     'field_name' => 'bc_views_query_facets',
-    'type' => 'options_buttons',
     'label' => $t('Facets to display on page.'),
     'default_value' => array(
-      _solr_facet_fields(),
+      0 => array('value' => 'mods_subject_topic_ms',),
+      1 => array('value' => 'mods_genre_ms',),
+      2 => array('value' => 'mods_subject_name_personal_namePart_ms',),
+      3 => array('value' => 'mods_subject_name_corporate_namePart_ms',),
+      4 => array('value' => 'mods_name_personal_namePart_ms',),
+      5 => array('value' => 'mods_name_corporate_namePart_ms',),
+      6 => array('value' => 'mods_relatedItem_host_titleInfo_title_ms',),
+      7 => array('value' => 'mods_relatedItem_series_titleInfo_title_ms',),
     ),
     'deleted' => 0,
-    'description' => $t('Facets to display on page.'),
     'entity_type' => 'node',
-    'required' => 1,
+    'required' => 0,
     'settings' => array(
-      'allowed_values' => _solr_facet_fields(),
+      'user_register_form' => FALSE,
     ),
-    // 'widget' => array(
-    //   'active' => 1,
-    //   'module' => 'options',
-    //   'type' => 'options_buttons',
-    // ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'options',
+      'settings' => array(),
+      'type' => 'options_buttons',
+      'weight' => 4,
+    ),
     'display' => array(
       'default' => array(
         'label' => 'hidden',
+        'module' => 'list',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 3,
+        'weight' => 2,
       ),
       'full' => array(
         'label' => 'hidden',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 3,
+        'weight' => 2,
       ),
     ),
   );
 
   return $instances;
-}
-
-function _solr_facet_fields() {
-  // For whatever reason I can't find where these are specified, we're doing it live.
-  return array(
-    1 => 'mods_subject_topic_ms',
-    2 => 'mods_genre_ms',
-    3 => 'mods_subject_name_personal_namePart_ms',
-    4 => 'mods_subject_name_corporate_namePart_ms',
-    5 => 'mods_name_personal_namePart_ms',
-    6 => 'mods_name_corporate_namePart_ms',
-    7 => 'mods_relatedItem_host_titleInfo_title_ms',
-    8 => 'mods_relatedItem_series_titleInfo_title_ms',
-  );
 }
 
 ?>

@@ -1,5 +1,5 @@
 <?php
-
+$_bc_views_solr_view = array();
 /**
  * Implements hook_node_info().
  */
@@ -45,23 +45,31 @@ function bc_views_node_type_insert($info) {
 
 function bc_views_node_view($node, $view_mode = 'full') {
 	if ($node->type == 'bc_views_solr_view') {
-
-		// Get our global ISLANDORA SOLR QC!
+		// Get our global variables.
+		global $_bc_views_solr_view;
 		global $_islandora_solr_queryclass;
 
-		// Fetch the query from the node. If null this becomes a dismax query.
-		$query = field_get_items('node', $node, 'bc_views_solr_query')[0]['value'];
-		$rows = field_get_items('node', $node, 'bc_views_query_rows')[0]['value'];
+		// We're on a bc_views_solr_view page.
+		$_bc_views_solr_view['view'] = TRUE;
+
+		// This is a global variable - the user never has the opportunity to change this.
+		foreach (field_get_items('node', $node, 'bc_views_query_facets') as $field) {
+			$_bc_views_solr_view['facets'][] = $field['value'];
+		}
+
+		/*
+		 * Fetch configured variables from the content page. 
+		 * These variables the user **can** change, we store them globally as a 'backup' and/or as 
+		 * a way to return to the original "collection view."
+		 */
+		$_bc_views_solr_view['query'] = field_get_items('node', $node, 'bc_views_solr_query')[0]['value'];
+		$_bc_views_solr_view['rows'] = field_get_items('node', $node, 'bc_views_query_rows')[0]['value'];
 
 		// Configure the query, default page display and send in the cloneeeees!
-		configure_query_and_page($query, $rows);
-
-		dsm(_solr_facet_fields());
+		configure_query_and_page($_bc_views_solr_view['query'], $_bc_views_solr_view['rows']);
 
 		// Send the SOLR query and prepare to display them in our content!
 		$solr_result_output = islandora_solr();
-
-		dsm($_islandora_solr_queryclass);
 
 		// Build the rest of our block's content - include the switch (list/grid) and sort blocks.
 		$node->content['switch_block'] = array(
@@ -81,17 +89,13 @@ function bc_views_node_view($node, $view_mode = 'full') {
 
 function configure_query_and_page($query, $rows, $display = 'grid') {
 	// Set the query as a param for the ISQP.
-	$_GET['f'][1] = $query;
+	!$_GET['f'] ? $_GET['f'][1] = $query : NULL;
 	
 	// Set the result limit.
 	!$_GET['solrLimit'] ? $_GET['solrLimit'] = $rows : NULL;
 	
 	// Set the result display type if the user has not selected one. 
 	!$_GET['display'] ? $_GET['display'] = $display : NULL;
-
-	// Variable in POST to determine that we're in a custom view.
-	// Do this because the global ISQP is not aware of what called it.
-	$_POST['bc_views_solr_view'] = TRUE;
 }
 
 function bc_views_node_view_alter(&$build) {
@@ -108,8 +112,9 @@ function bc_views_menu_breadcrumb_alter(&$active_trail, $item) {
  * Implements hook_block_list_alter().
  */
 function bc_views_block_list_alter(&$blocks) {
+	global $_bc_views_solr_view;
 	// If it is not one of our UNIQUE queries, return;
-	if (!$_POST['bc_views_solr_view']) {
+	if (!$_bc_views_solr_view['view']) {
 		return;
 	}
 	// Find the display_switch block that, for some unknown reason, is displayed on all pages on our site (or by default)
@@ -160,11 +165,16 @@ function dsm_all_islandora_blocks() {
 }
 
 function bc_views_form_islandora_solr_advanced_search_form_alter(&$form, &$form_state) {
-		// Set the advanced form to preserve our filters - we will also use this later to modify the titles of this form.
-	  // TODO: Also might need to change the way the page redirects users...
-		if ($GLOBALS['_islandora_solr_queryclass']->internalSolrParams['bc_views_solr_view']) {
-			$form_state['values']['islandora_solr_allow_preserve_filters'] = TRUE;
+	// Set the advanced form to preserve our filters - we will also use this later to modify the titles of this form.
+  // TODO: Also might need to change the way the page redirects users...
+	global $_bc_views_solr_view;
+	// If it is not one of our UNIQUE queries, return;
+	if (!$_bc_views_solr_view['view']) {
+		return;
 	}
+	dsm($form);
+	dsm($form_state);
+	$form_state['values']['islandora_solr_allow_preserve_filters'] = TRUE;
 }
 
 // BEGIN ALL OF THE SOLR QUERY AND RESULT HOOKS WE MIGHT EVER WANT.
@@ -175,23 +185,24 @@ function bc_views_form_islandora_solr_advanced_search_form_alter(&$form, &$form_
 // function bc_views_islandora_solr_query($islandora_solr_query) {
 // }
 
-
-
 /**
  * Implements hook_islandora_solr_query_alter().
  * Modifies query before execution....
  */
 function bc_views_islandora_solr_query_alter(&$islandora_solr_query) {
-	if (!$_POST['bc_views_solr_view']) {
+	global $_bc_views_solr_view;
+	// If it is not one of our UNIQUE queries, return;
+	if (!$_bc_views_solr_view['view']) {
 		return;
 	}
+	dsm($_bc_views_solr_view);
+	global $_islandora_solr_queryclass;
 	// I need to figure out pagination and why ROWS isn't restricting the results from SOLR. Fucked up...
 	// This leads to pagination, not RESULT limits.
-	$islandora_solr_query->solrLimit = $GLOBALS['_islandora_solr_queryclass']->internalSolrParams['solrLimit'];
+	$islandora_solr_query->solrLimit = $_islandora_solr_queryclass->internalSolrParams['solrLimit'];
 	$islandora_solr_query->solrParams['rows'] = 2;
 	$islandora_solr_query->rows = 2;
-
-	// unset($islandora_solr_query->solrParams['facet.field'][2]);
+	$islandora_solr_query->solrParams['facet.field'] = $_bc_views_solr_view['facets'];
 }
 
 // !!
@@ -201,13 +212,11 @@ function bc_views_islandora_solr_query_alter(&$islandora_solr_query) {
 /**
  * Implements hook_islandora_solr_query_result().
  */
-function bc_views_islandora_solr_query_result($result) {
-
-}
+// function bc_views_islandora_solr_query_result($result) {
+// }
 
 /**
  * Implements hook_islandora_solr_results_alter().
  */
-function bc_views_islandora_solr_results_alter(&$search_results, $query_processor) {
-
-}
+// function bc_views_islandora_solr_results_alter(&$search_results, $query_processor) {
+// }
