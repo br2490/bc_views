@@ -4,10 +4,22 @@
  */
 function bc_views_install() {
   node_types_rebuild();
-	$types = node_type_get_types();
-  node_add_body_field($types['bc_views_solr_view']);
+	// $types = node_type_get_types();
+ //  node_add_body_field($types['bc_views_solr_view']);
   add_custom_fields();
   variable_set('comment_bc_views_solr_view', '0');
+
+/*
+  comment_anonymous_bc_views_solr_view: 0
+  comment_bc_views_solr_view: "0"
+  comment_default_mode_bc_views_solr_view: 1
+  comment_default_per_page_bc_views_solr_view: "50"
+  comment_form_location_bc_views_solr_view: 1
+  comment_preview_bc_views_solr_view: "1"
+  comment_subject_field_bc_views_solr_view: 1
+  node_preview_bc_views_solr_view: "1"
+  node_submitted_bc_views_solr_view: 0
+*/
 }
 
 function add_custom_fields() {
@@ -58,11 +70,11 @@ function delete_custom_fields() {
 function _bc_views_installed_fields() {
 	$fields = array();
 
-  $fields['body'] = array(
+  $fields['bc_views_body'] = array(
     'entity_types' => array('node'),
     'translatable' => 0,
     'settings' => array(),
-    'field_name' => 'body',
+    'field_name' => 'bc_views_body',
     'type' => 'text_long',
     'module' => 'text',
     'active' => 1,
@@ -129,24 +141,21 @@ function _bc_views_installed_instances() {
   $instances = array();
   $t = get_t();
 
-  $instances['body'] = array(
+  $instances['bc_views_body'] = array(
     'bundle' => 'bc_views_solr_view',
-    'field_name' => 'body',
-    'type' => 'text',
+    'field_name' => 'bc_views_body',
+    'type' => 'text_long',
     'label' => $t('Collection Summary'),
     'deleted' => 0,
     'entity_type' => 'node',
     'required' => 0,
     'settings' => array(
-      'text_processing' => 0,
+      'text_processing' => 1,
       'user_register_form' => 0,
     ),
     'widget' => array(
       'active' => 1,
       'module' => 'text',
-      'settings' => array(
-        'rows' => 10,
-      ),
       'type' => 'text_textarea',
       'weight' => 1,
     ),
