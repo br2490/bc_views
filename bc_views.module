@@ -57,17 +57,20 @@ function bc_views_node_view($node, $view_mode = 'full') {
 			$_bc_views_solr_view['facets'][] = $field['value'];
 		}
 
+		dsm_all_islandora_blocks();
+
 		/*
 		 * Fetch configured variables from the content page. 
 		 * These variables the user **can** change, we store them globally as a 'backup' and/or as 
 		 * a way to return to the original "collection view."
 		 */
-		$_bc_views_solr_view['query'] = field_get_items('node', $node, 'bc_views_solr_query')[0]['value'];
+		$_bc_views_solr_view['facets'] = field_get_items('node', $node, 'bc_views_solr_query')[0]['value'];
 		$_bc_views_solr_view['rows'] = field_get_items('node', $node, 'bc_views_query_rows')[0]['value'];
 
 		// Configure the query, default page display and send in the cloneeeees!
-		configure_query_and_page($_bc_views_solr_view['query'], $_bc_views_solr_view['rows']);
+		configure_query_and_page($_bc_views_solr_view['facets'], $_bc_views_solr_view['rows']);
 
+		dsm($_bc_views_solr_view);
 		// Send the SOLR query and prepare to display them in our content!
 		$solr_result_output = islandora_solr();
 
@@ -87,9 +90,9 @@ function bc_views_node_view($node, $view_mode = 'full') {
 	}
 }
 
-function configure_query_and_page($query, $rows, $display = 'grid') {
+function configure_query_and_page($facets, $rows, $display = 'grid') {
 	// Set the query as a param for the ISQP.
-	!$_GET['f'] ? $_GET['f'][1] = $query : NULL;
+	!$_GET['f'] ? $_GET['f'][1] = $facets : NULL;
 	
 	// Set the result limit.
 	!$_GET['solrLimit'] ? $_GET['solrLimit'] = $rows : NULL;
@@ -165,6 +168,7 @@ function dsm_all_islandora_blocks() {
 }
 
 function bc_views_form_islandora_solr_advanced_search_form_alter(&$form, &$form_state) {
+	dsm($form);
 	// Set the advanced form to preserve our filters - we will also use this later to modify the titles of this form.
   // TODO: Also might need to change the way the page redirects users...
 	global $_bc_views_solr_view;
@@ -172,9 +176,73 @@ function bc_views_form_islandora_solr_advanced_search_form_alter(&$form, &$form_
 	if (!$_bc_views_solr_view['view']) {
 		return;
 	}
+	dsm('Altered to our search handler.');
+	$form['#bc_views'] = TRUE;
+	$form['#submit'][0] = 'bc_views_advanced_search_form_submit';
+	//$form['#id'] = 'bc_views_advanced_search_form';
+
 	dsm($form);
-	dsm($form_state);
-	$form_state['values']['islandora_solr_allow_preserve_filters'] = TRUE;
+}
+
+// This code is taken directly from the module islandora_solr_search, includes/blocks.inc (l~685)
+// I've replaced the CONSTANT used as a redirect to keep us on our CUSTOM view page... 
+// Many thanks to them.
+/**
+ * Islandora Solr advanced search form submit callback.
+ *
+ * @param array $form
+ *   An associative array containing form structure.
+ * @param array $form_state
+ *   An associative array containing form state.
+ *
+ * @see islandora_solr_advanced_search_form()
+ */
+function bc_views_advanced_search_form_submit($form, &$form_state) {
+  module_load_include('inc', 'islandora_solr', 'includes/utilities');
+  dsm($form);
+  dsm($form_state);
+  // Collect query values.
+  $query_array = array();
+  foreach ($form_state['values']['terms'] as $term) {
+    $field = $term['field'];
+    $search = trim($term['search']);
+    $search = islandora_solr_replace_slashes($search);
+    $boolean = (isset($term['boolean'])) ? $term['boolean'] : variable_get('islandora_solr_search_boolean', 'user');
+    $field = islandora_solr_lesser_escape($field);
+    // Add query.
+    if (!empty($search)) {
+      $query_array[] = array(
+        'search' => "$field:($search)",
+        'boolean' => $boolean,
+      );
+    }
+  }
+
+  // Create query.
+  $query = '';
+  $i = 0;
+  foreach ($query_array as $term) {
+    $query .= $term['search'];
+    if (count($query_array) - 1 != $i) {
+      $query .= ' ' . $term['boolean'] . ' ';
+    }
+    $i++;
+  }
+
+  // Check if query is empty.
+  if (empty($query)) {
+    $query = '*:*';
+  }
+
+  $filter = isset($_GET['f']) ? $_GET['f'] : '';
+  
+  dsm($query);
+  dsm($filter);
+
+  return;
+  // Navigate to results page.
+
+  $form_state['redirect'] = array( current_path(), '');
 }
 
 // BEGIN ALL OF THE SOLR QUERY AND RESULT HOOKS WE MIGHT EVER WANT.
