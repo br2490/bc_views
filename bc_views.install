@@ -4,7 +4,9 @@
  */
 function bc_views_install() {
   node_types_rebuild();
-	add_custom_fields();
+	$types = node_type_get_types();
+  node_add_body_field($types['bc_views_solr_view']);
+  add_custom_fields();
   variable_set('comment_bc_views_solr_view', '0');
 }
 
@@ -216,7 +218,7 @@ Examples:
     'bundle' => 'bc_views_solr_view',
     'field_name' => 'bc_views_query_rows',
     'type' => 'text',
-    'label' => $t('Results to display on page.'),
+    'label' => $t('Number of results to display per page'),
     'default_value' => array(
       0 => array(
         'value' => $t('8'),
@@ -258,7 +260,7 @@ Examples:
 $instances['bc_views_query_facets'] = array(
     'bundle' => 'bc_views_solr_view',
     'field_name' => 'bc_views_query_facets',
-    'label' => $t('Facets to display on page.'),
+    'label' => $t('Facets to display on page'),
     'default_value' => array(
       0 => array('value' => 'mods_subject_topic_ms',),
       1 => array('value' => 'mods_genre_ms',),
