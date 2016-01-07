@@ -73,8 +73,10 @@ function bc_views_search_form($form, &$form_state) {
 
 function bc_views_search_form_submit($form, &$form_state) {
 	global $_islandora_solr_queryclass; 
+	global $_bc_views_solr_view;
+
 	$search_string = islandora_solr_replace_slashes($form_state['values']['query']);
-	
+
 	$params = isset($_islandora_solr_queryclass->internalSolrParams) ? $_islandora_solr_queryclass->internalSolrParams : array();
 
 	$query = array_merge($params, array('cq' => $search_string));
@@ -142,13 +144,17 @@ function bc_views_node_view($node, $view_mode = 'full') {
 		$_bc_views_solr_view['content_query'] = field_get_items('node', $node, 'bc_views_solr_query')[0]['value'];
 		$_bc_views_solr_view['rows'] = field_get_items('node', $node, 'bc_views_query_rows')[0]['value'];
 		
-		// We want to default to the grid view by default, but if the user selects something else 
+		// We want to default to the grid view, but if the user selects something else 
 		// we do not want to override them back to the grid view.
 		!$_GET['display'] ? $_GET['display'] = 'grid' : NULL;
 
 		// Send the SOLR query and prepare to display them in our content!
-		//$solr_result_output = islandora_solr("catch_all_fields_mt:devilish");
-		$solr_result_output = islandora_solr();
+		// $solr_result_output = islandora_solr("catch_all_fields_mt:devilish");
+		$collection_query = drupal_get_query_parameters()['cq'];
+		!$collection_query ? 
+			$solr_result_output = islandora_solr() : 
+			$solr_result_output = islandora_solr("catch_all_fields_mt:($collection_query)");
+
 
 		// Build the rest of our block's content - include the switch (list/grid) and sort blocks.
 		$node->content['switch_block'] = array(
@@ -240,7 +246,6 @@ function dsm_all_islandora_blocks() {
  */
 function bc_views_islandora_solr_query($islandora_solr_query) {
 	global $_bc_views_solr_view;
-	dsm($_bc_views_solr_view);
 	if (!$_bc_views_solr_view['view']) {
 		return;
 	}
@@ -252,14 +257,10 @@ function bc_views_islandora_solr_query($islandora_solr_query) {
 	 */
 	$collection_query = drupal_get_query_parameters()['cq'];
 	if ($collection_query) {
-		// Set User's Query
-		$islandora_solr_query->solrQuery = "catch_all_fields_mt:($collection_query)";
 
 		// Tokenize and set field query limiter
 		$content_query = str_replace('_ms:', '_mt:', $_bc_views_solr_view['content_query']);
 		$islandora_solr_query->solrParams['fq'][] = $content_query;
-		
-		dsm($islandora_solr_query);
 
 		// Do our thang...
 		return $islandora_solr_query;
@@ -268,8 +269,6 @@ function bc_views_islandora_solr_query($islandora_solr_query) {
 	// Set field query limiter.
 	$islandora_solr_query->solrParams['fq'][] = $_bc_views_solr_view['content_query'];
 	
-	dsm($islandora_solr_query);
-
 	return $islandora_solr_query;
 }
 
