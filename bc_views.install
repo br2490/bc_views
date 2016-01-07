@@ -177,14 +177,14 @@ function _bc_views_installed_instances() {
     'bundle' => 'bc_views_solr_view',
     'field_name' => 'bc_views_solr_query',
     'type' => 'text',
-    'label' => $t('SOLR Query'),
+    'label' => $t('Collection SOLR Query - landing page'),
 		'default_value' => array(
 		  0 => array(
 		    'value' => $t('RELS_EXT_isMemberOf_uri_ms:"info:fedora/bc:barnard-literary-magazine"'),
 		  ),
 		),
 		'deleted' => 0,
-    'description' => $t('A SOLR query that will generate desired \'collection view.\' <br>
+    'description' => $t('The SOLR query that will generate desired \'collection view.\' <br>
     An easy way to create this question is to visit the <a href="'.$GLOBALS['base_root'].'/islandora/search">search page</a> and start with a basic query.
 The URL bar will display the encoded query string. This will give you an idea of a query string.<br><strong><em>Note: You are not restricted to the SOLR search fields available to a site visitor.</em></strong><br>
 Examples: 
