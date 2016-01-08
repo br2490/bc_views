@@ -127,11 +127,12 @@ function bc_views_node_view($node, $view_mode = 'full') {
 		// Build the rest of our block's content - include the switch (list/grid) and sort blocks.
 		$node->content['switch_block'] = array(
 			'#markup' => block_content_render('islandora_solr', 'display_switch'),
-			'#weight' => '1',	// DO WE WANT THESE ON THE SAME LINE?!
+			'#weight' => '4',	// DO WE WANT THESE ON THE SAME LINE?!
 			);
+
 		$node->content['sort_order_block'] = array(
 			'#markup' => block_content_render('islandora_solr', 'sort'),
-			'#weight' => '1', // DO WE WANT THESE ON THE SAME LINE?! (YES, BEN SAYS YES!)
+			'#weight' => '4', // DO WE WANT THESE ON THE SAME LINE?! (YES, BEN SAYS YES!)
 			);
 		$node->content['results'] = array(
 			'#markup' => $solr_result_output,
@@ -153,11 +154,17 @@ function bc_views_menu_breadcrumb_alter(&$active_trail, $item) {
 	// dsm($item);
 }
 
+
+function bc_views_block_list ($blocks) {
+	dsm($blocks);
+}
 /*
  * Implements hook_block_list_alter().
  */
 function bc_views_block_list_alter(&$blocks) {
 	global $_bc_views_solr_view;
+	global $theme_key;
+
 	// If it is not one of our UNIQUE queries, return;
 	if (!$_bc_views_solr_view['view']) {
 		return;
@@ -174,38 +181,43 @@ function bc_views_block_list_alter(&$blocks) {
 	 * ~~~~ SIDEBAR FIRST CONTENT ~~~~~
 	 * We're going to add our sidebar content, mainly the *facet block* and *advanced search block* 
 	 * Both of these are from the islandora_solr module.
-	 *
-	 * Though by default they _should_ display on SIDEBAR1, we're going to enforce that here.
-	 * We're also going to ensure it users our GLOBAL theme... I'm not 100% if this is ness...
 	 */
-	$theme = $GLOBALS['theme'];
 	$region = 'sidebar_first';
+	$additional_blocks = array(
+			'islandora_solr' => 
+				array(
+					'basic_facets', 
+					'advanced', 
+					'current_query',
+				),
+			);
 
-	$facets = block_load('islandora_solr', 'basic_facets');
-	$facets->theme = $theme;
-	$facets->region = $region;
-	
-	$advanced = block_load('islandora_solr', 'advanced');
-	$advanced->theme = $theme;
-	$advanced->region = $region;
+	// Fetch the additional blocks, setting the theme, region and weight.	
+	foreach ($additional_blocks as $module_name => $block_name) {
+		foreach($block_name as $weight => $bid) {
+			$block = block_load($module_name, $bid);
+			$block->theme = $theme_key;
+			$block->region = $region;
+			$block->weight = $weight;
+			$blocks[] = $block;
+		}
+	}
 
-	$current_query = block_load('islandora_solr', 'current_query');
-	$current_query->theme = $theme;
-	$current_query->region = $region;
+  // Sort the blocks
+  usort($blocks, "custom_sort");
+}
 
-	// SEND IN THE BLOOOOCCCKKKSSS! 
-	$blocks[] = $facets;
-	$blocks[] = $advanced;
-	$blocks[] = $current_query;
+// Sorting function for blocks as objects. Why drupal only has sort functions for arrays is beyond me...
+function custom_sort($a,$b) {
+  return $a->weight>$b->weight;
 }
 
 // Generates a rendered block from $module with name $function.
 function block_content_render($module, $function) {
 	$block = block_load($module, $function);
-	$block->theme = $GLOBALS['theme'];
-	$render_block = _block_render_blocks(array($block));
-	$build_block = _block_get_renderable_array($render_block);
-	return drupal_render($build_block);
+	$block_renderable = _block_get_renderable_array(_block_render_blocks(array($block)));
+	$render = drupal_render($block_renderable);
+	return $render;	
 }
 
 // Reports all islandora blocks available... I'm so lazy.
@@ -265,7 +277,7 @@ function bc_views_islandora_solr_query_alter(&$islandora_solr_query) {
 	// Update facets to only those selected...
 	$islandora_solr_query->solrParams['facet.field'] = $_bc_views_solr_view['facets'];
 
-	dsm($islandora_solr_query);
+	// dsm($islandora_solr_query);
 }
 
 // !!
