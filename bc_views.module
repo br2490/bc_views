@@ -19,7 +19,7 @@ function bc_views_node_info() {
   return $items;
 }
 
-
+## REGION TEMPORARY SEARCH TESTING
 // This is a temporary search block in an attempt to get SOLR working with our current setup.
 /**
  * Implements hook_block_info().
@@ -88,6 +88,7 @@ function bc_views_search_form_submit($form, &$form_state) {
     ),
   );
 }
+## END REGION TEMPORARY SEARCH TESTING
 
 /**
  * Implements hook_form()
@@ -102,14 +103,6 @@ function bc_views_form($node, $form_state) {
 function bc_views_form_alter(&$form, $form_state, $form_id) {
 	if ($form_id == 'bc_views_solr_view_node_form') {
 	}
-}
-
-/**
- * Implements hook_form_FORM_ID_alter()
- * Used to remove datepicker JS and its CSS/functions.
- */
-function bc_views_form_islandora_solr_date_filter_form_alter(&$form, &$form_state) {
-	unset($form['#attached']);
 }
 
 /**
@@ -146,15 +139,12 @@ function bc_views_node_view($node, $view_mode = 'full') {
 		
 		// We want to default to the grid view, but if the user selects something else 
 		// we do not want to override them back to the grid view.
-		!$_GET['display'] ? $_GET['display'] = 'grid' : NULL;
+		!isset($_GET['display']) ? $_GET['display'] = 'grid' : NULL;
 
 		// Send the SOLR query and prepare to display them in our content!
-		// $solr_result_output = islandora_solr("catch_all_fields_mt:devilish");
-		$collection_query = drupal_get_query_parameters()['cq'];
-		!$collection_query ? 
+		!isset(drupal_get_query_parameters()['cq']) ? // Check for a user COLLECTION QUERY (cq)
 			$solr_result_output = islandora_solr() : 
-			$solr_result_output = islandora_solr("catch_all_fields_mt:($collection_query)");
-
+			$solr_result_output = islandora_solr("catch_all_fields_mt:(drupal_get_query_parameters()[cq])");
 
 		// Build the rest of our block's content - include the switch (list/grid) and sort blocks.
 		$node->content['switch_block'] = array(
@@ -255,8 +245,7 @@ function bc_views_islandora_solr_query($islandora_solr_query) {
 	 * Then we set our Solr Query to the user's term with a CATCH_ALL so we get as much for our search as possible.
 	 * Finally, we return the ISQP and stop the function from continuing.
 	 */
-	$collection_query = drupal_get_query_parameters()['cq'];
-	if ($collection_query) {
+	if (isset(drupal_get_query_parameters()['cq'])) {
 
 		// Tokenize and set field query limiter
 		$content_query = str_replace('_ms:', '_mt:', $_bc_views_solr_view['content_query']);
@@ -288,8 +277,10 @@ function bc_views_islandora_solr_query_alter(&$islandora_solr_query) {
 	// This leads to pagination, not RESULT limits.
 	$islandora_solr_query->solrLimit = $_bc_views_solr_view['rows'];
 
-	// Update facets to those selected...
+	// Update facets to only those selected...
 	$islandora_solr_query->solrParams['facet.field'] = $_bc_views_solr_view['facets'];
+
+	dsm($islandora_solr_query);
 }
 
 // !!
@@ -307,3 +298,11 @@ function bc_views_islandora_solr_query_alter(&$islandora_solr_query) {
  */
 // function bc_views_islandora_solr_results_alter(&$search_results, $query_processor) {
 // }
+
+/**
+ * Implements hook_form_FORM_ID_alter()
+ * Used to remove datepicker JS.
+ */
+function bc_views_form_islandora_solr_date_filter_form_alter(&$form, &$form_state) {
+	unset($form['#attached']);
+}
