@@ -21,32 +21,6 @@ function bc_views_node_info() {
 
 ## REGION TEMPORARY SEARCH TESTING
 // This is a temporary search block in an attempt to get SOLR working with our current setup.
-/**
- * Implements hook_block_info().
- */
-function bc_views_block_info() {
-	$blocks['bc_views_search'] = array( 
-		'info' => t('Search form for Barnard Custom Collection View'),
-		'module' => 'bc_views',
-		'file' => 'bc_views.module',
-		'form' => 'bc_views_search_form',
-		);
-	return $blocks;
-}
-
-/**
- * Implements hook_block_view().
- */
-function bc_views_block_view($delta = '') {
-	$block = array();
-	switch ($delta) {
-		case 'bc_views_search' :
-			$block['content'] = drupal_get_form('bc_views_search_form');
-		break;
-	}
-	return $block;
-}
-
 function bc_views_search_form($form, &$form_state) {
   $form['bc_views_search'] = array(
   	'#type' => 'container',
@@ -142,9 +116,13 @@ function bc_views_node_view($node, $view_mode = 'full') {
 		!isset($_GET['display']) ? $_GET['display'] = 'grid' : NULL;
 
 		// Send the SOLR query and prepare to display them in our content!
-		!isset(drupal_get_query_parameters()['cq']) ? // Check for a user COLLECTION QUERY (cq)
-			$solr_result_output = islandora_solr() : 
-			$solr_result_output = islandora_solr("catch_all_fields_mt:(drupal_get_query_parameters()[cq])");
+		if (!isset(drupal_get_query_parameters()['cq'])) { // Check for a user COLLECTION QUERY (cq)
+			$solr_result_output = islandora_solr();
+		}
+		else {
+			$collection_query = drupal_get_query_parameters()['cq'];
+			$solr_result_output = islandora_solr("catch_all_fields_mt:($collection_query)");
+		}
 
 		// Build the rest of our block's content - include the switch (list/grid) and sort blocks.
 		$node->content['switch_block'] = array(
@@ -159,8 +137,15 @@ function bc_views_node_view($node, $view_mode = 'full') {
 			'#markup' => $solr_result_output,
 			'#weight' => '5',
 			);
+		// TEMPORARY SEARCH TESTING
+		$search_form = drupal_get_form('bc_views_search_form');
+		$node->content['search_box'] = array(
+			'#markup' => drupal_render($search_form),
+			'#weight' => '6',
+			);
 	}
 }
+
 
 // UNUSED AT PRESENT
 function bc_views_menu_breadcrumb_alter(&$active_trail, $item) {
@@ -268,7 +253,7 @@ function bc_views_islandora_solr_query($islandora_solr_query) {
 function bc_views_islandora_solr_query_alter(&$islandora_solr_query) {
 	global $_bc_views_solr_view;
 
-	// If it is not one of our UNIQUE queries, return;6
+	// If it is not one of our UNIQUE queries, return;
 	if (!$_bc_views_solr_view['view']) {
 		return;
 	}
