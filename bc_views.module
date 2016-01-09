@@ -92,7 +92,6 @@ function bc_views_node_view($node, $view_mode = 'full') {
 	}
 }
 
-
 // UNUSED AT PRESENT
 function bc_views_menu_breadcrumb_alter(&$active_trail, $item) {
 	// dpm($active_trail);
@@ -127,19 +126,22 @@ function bc_views_block_list_alter(&$blocks) {
 	$additional_blocks = array(
 			'islandora_solr' => 
 				array(
-					'basic_facets', 
-					'advanced', 
-					'current_query',
+					'basic_facets | Collection Facets | sidebar_first', 
+					'advanced | Advanced Collection Search | sidebar_first', 
+					'current_query | USED FOR TESTING | sidebar_first',
 				),
 			);
 
 	// Fetch the additional blocks, setting the theme, region and weight.	
 	foreach ($additional_blocks as $module_name => $block_name) {
 		foreach($block_name as $weight => $bid) {
-			$block = block_load($module_name, $bid);
+			$bid_info = explode(" | ", $bid);
+			$block = block_load($module_name, $bid_info[0]);
 			$block->theme = $theme_key;
-			$block->region = $region;
+			$block->title = $bid_info[1];
+			$block->region = $bid_info[2];
 			$block->weight = $weight;
+			
 			$blocks[] = $block;
 		}
 	}
@@ -152,6 +154,19 @@ function bc_views_block_list_alter(&$blocks) {
 function custom_sort($a,$b) {
   return $a->weight>$b->weight;
 }
+
+// function bc_views_block_view_alter(&$data, $block) {
+// 	global $_bc_views_solr_view;
+// 	if (!isset($_bc_views_solr_view)) {
+// 		return;
+// 	}
+
+// 	if ($block->delta == 'advanced') {
+// 		$block->title = "Something";
+// 	} elseif ($block->delta == 'basic_facets') {
+// 		$block->title = "Facets...";
+// 	}
+// }
 
 // Generates a rendered block from $module with name $function.
 function block_content_render($module, $function) {
