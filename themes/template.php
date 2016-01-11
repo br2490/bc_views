@@ -1,0 +1,1 @@
+../../../themes/barnard_theme/template.php

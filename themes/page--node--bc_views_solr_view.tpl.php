@@ -1,0 +1,1 @@
+../../../themes/barnard_theme/templates/page--node--bc_views_solr_view.tpl.php

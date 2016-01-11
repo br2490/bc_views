@@ -132,7 +132,7 @@ function bc_views_block_list_alter(&$blocks) {
 				array(
 					'advanced | Search this Collection | sidebar_first', 
 					'basic_facets | Filter this Collection | sidebar_first', 
-					'current_query | USED FOR TESTING | sidebar_first',
+					//'current_query | USED FOR TESTING | sidebar_first',
 				),
 			);
 
