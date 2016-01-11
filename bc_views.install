@@ -5,23 +5,9 @@
 function bc_views_install() {
   node_types_rebuild();
 	// $types = node_type_get_types();
- //  node_add_body_field($types['bc_views_solr_view']);
+  // node_add_body_field($types['bc_views_solr_view']);
   add_custom_fields();
-  variable_set('comment_bc_views_solr_view', '0');
-  variable_set('pathauto_node_bc_views_solr_view_pattern', 'collections/[node:title]');
-  variable_set('menu_parent_bc_views_solr_view', 'main-menu:455');
-
-/*
-  comment_anonymous_bc_views_solr_view: 0
-  comment_bc_views_solr_view: "0"
-  comment_default_mode_bc_views_solr_view: 1
-  comment_default_per_page_bc_views_solr_view: "50"
-  comment_form_location_bc_views_solr_view: 1
-  comment_preview_bc_views_solr_view: "1"
-  comment_subject_field_bc_views_solr_view: 1
-  node_preview_bc_views_solr_view: "1"
-  node_submitted_bc_views_solr_view: 0
-*/
+  add_variables();
 }
 
 function add_custom_fields() {
@@ -36,6 +22,11 @@ function add_custom_fields() {
   }
 }
 
+function add_variables() {
+  foreach(_bc_views_variables() as $var => $option) {
+    variable_set($var, $option);
+  }
+}
 
 /**
  * Implements hook_uninstall().
@@ -52,10 +43,7 @@ function bc_views_uninstall() {
   delete_custom_fields();
 	node_type_delete($node_name);
   field_purge_batch(1000);
-
-  variable_del('comment_bc_views_solr_view');
-  variable_del('pathauto_node_bc_views_solr_view_pattern');
-  variable_del('menu_parent_bc_views_solr_view');
+  remove_variables();
 }
 
 function delete_custom_fields() {
@@ -69,9 +57,43 @@ function delete_custom_fields() {
   }
 }
 
+function remove_variables() {
+  foreach(array_keys(_bc_views_variables()) as $var) {
+    variable_del($var);
+  }
+}
+
 /**
- * BEGIN FIELDS AND INSTANCES
+ * BEGIN VARIABLES, FIELDS AND INSTANCES
  */
+
+function _bc_views_variables() {
+  $variables = array();
+
+  // No comments
+  $variables['comment_bc_views_solr_view'] = '0';
+  
+  // No submitted info (i.e. author info and date)
+  $variables['node_submitted_bc_views_solr_view'] = '0';
+  
+  // Default state to published, without other options (e.g., sticky, promoted, etc.).
+  $variables['node_options_bc_views_solr_view'] = array(
+    '0' => 'status'
+    );
+
+  // Auto path generation default
+  $variables['pathauto_node_bc_views_solr_view_pattern'] = 'collections/[node:title]';
+  
+  // Menu Default
+  $variables['menu_options_bc_views_solr_view'] = array( 
+    '0' => 'main-menu',
+    );
+
+  // Menu Parent (collections). NOT SUPER SURE ABOUT THIS ONE.
+  $variables['menu_parent_bc_views_solr_view'] = 'main-menu:455';
+  
+  return $variables;
+}
 
 function _bc_views_installed_fields() {
 	$fields = array();

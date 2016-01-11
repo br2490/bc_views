@@ -93,23 +93,14 @@ function bc_views_node_view($node, $view_mode = 'full') {
 			'#weight' => '3',
 			);
 
-		$node->content['search_nav'] = array(
-			'#markup'=> block_content_render('islandora_solr', 'search_navigation'),
-			'#weight'=> '4',
-			);
-
-		dpm(menu_get_active_breadcrumb());
-
-		// dpm($node->content['search_nav']);
-
 	}
 }
 
 // UNUSED AT PRESENT
-function bc_views_menu_breadcrumb_alter(&$active_trail, $item) {
-	dpm($active_trail);
-	dpm($item);
-}
+// function bc_views_menu_breadcrumb_alter(&$active_trail, $item) {
+// 	// dpm($active_trail);
+// 	// dpm($item);
+// }
 
 /*
  * Implements hook_block_list_alter().
