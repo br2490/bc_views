@@ -8,6 +8,8 @@ function bc_views_install() {
  //  node_add_body_field($types['bc_views_solr_view']);
   add_custom_fields();
   variable_set('comment_bc_views_solr_view', '0');
+  variable_set('pathauto_node_bc_views_solr_view_pattern', 'collections/[node:title]');
+  variable_set('menu_parent_bc_views_solr_view', 'main-menu:455');
 
 /*
   comment_anonymous_bc_views_solr_view: 0
@@ -50,6 +52,10 @@ function bc_views_uninstall() {
   delete_custom_fields();
 	node_type_delete($node_name);
   field_purge_batch(1000);
+
+  variable_del('comment_bc_views_solr_view');
+  variable_del('pathauto_node_bc_views_solr_view_pattern');
+  variable_del('menu_parent_bc_views_solr_view');
 }
 
 function delete_custom_fields() {
