@@ -38,6 +38,14 @@ function bc_views_form_alter(&$form, $form_state, $form_id) {
 	// dpm($form_id);
 }
 
+/**
+ * Implements hook_form_BASE_ID_alter()
+ */
+// WILL BE USED TO REMOVE THE DATE PICKER....
+function bc_views_form_islandora_solr_range_slider_form_alter(&$form, &$form_state) {
+	dpm($form);
+}
+
 function bc_views_node_view($node, $view_mode = 'full') {
 	if ($node->type == 'bc_views_solr_view') {
 		// dpm_all_islandora_blocks();
@@ -187,3 +195,5 @@ function dpm_all_islandora_blocks() {
 function bc_views_form_islandora_solr_date_filter_form_alter(&$form, &$form_state) {
 	unset($form['#attached']);
 }
+
+
