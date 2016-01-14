@@ -172,7 +172,9 @@ function bc_views_block_list_alter(&$blocks) {
   usort($blocks, "custom_sort");
 }
 
-// Sorting function for blocks as objects. Why drupal only has sort functions for arrays is beyond me...
+/**
+ * Sorting function for blocks as objects. Why drupal only has sort functions for arrays is beyond me...
+ */
 function custom_sort($a,$b) {
   return $a->weight>$b->weight;
 }
@@ -184,7 +186,9 @@ function custom_sort($a,$b) {
 // 	}
 // }
 
-// Generates a rendered block from $module with name $function.
+/**
+ * Generates a rendered block from $module with name $function.
+ */
 function block_content_render($module, $function) {
 	$block = block_load($module, $function);
 	$block_renderable = _block_get_renderable_array(_block_render_blocks(array($block)));
@@ -192,18 +196,10 @@ function block_content_render($module, $function) {
 	return $render;	
 }
 
-// Reports all islandora blocks available... I'm so lazy.
+/**
+ * Reports all islandora blocks available... I'm so lazy. (DEVELOPMENT)
+ */
 function dpm_all_islandora_blocks() {
 	$islandoraBlocks = module_invoke('islandora_solr', 'block_info');
 	dpm($islandoraBlocks);
 }
-
-/**
- * Implements hook_form_FORM_ID_alter()
- * Used to remove datepicker JS.
- */
-function bc_views_form_islandora_solr_date_filter_form_alter(&$form, &$form_state) {
-	unset($form['#attached']);
-}
-
-
