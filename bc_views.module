@@ -102,7 +102,6 @@ function bc_views_node_view($node, $view_mode = 'full') {
 			'#weight' => '2',
 			);
 
-
 		$node->content['results'] = array(
 			'#markup' => $solr_result_output,
 			'#weight' => '3',
@@ -140,11 +139,11 @@ function bc_views_block_list_alter(&$blocks) {
 
 	// We're going to add our sidebar content, mainly the facet block and
   // advanced search block. Both of these are from the islandora_solr module.
-  $region = 'sidebar_first';
-  $additional_blocks = array(
-  	'islandora_solr' => array(
-  		'advanced' => array(
-  			'title' => 'Search this collection',
+
+	$additional_blocks = array(
+    'islandora_solr' => array(
+			'advanced' => array(
+        'title' => 'Search this collection',
         'region' => 'sidebar_first',
         'weight' => 0,
       ),

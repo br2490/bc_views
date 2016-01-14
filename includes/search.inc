@@ -13,7 +13,7 @@ function bc_views_islandora_solr_query($islandora_solr_query) {
 		return;
 	}
 
-  // Has the user entered a search term? Here is where we modify our collection
+	// Has the user entered a search term? Here is where we modify our collection
   // view... First we need to find if any strings were used in the solr fq, and
   // change them to tokenized fields (i.e. 'ms' becomes 'mt'). Then we set our
   // solr query to the user's term with a catch-all so we get as much for our
@@ -37,7 +37,7 @@ function bc_views_islandora_solr_query($islandora_solr_query) {
 
 /**
  * Implements hook_islandora_solr_query_alter().
- * Modifies query before execution. 
+ * Modifies query before execution.
  */
 function bc_views_islandora_solr_query_alter(&$islandora_solr_query) {
 	global $_bc_views_solr_view;
@@ -125,13 +125,12 @@ function bc_views_advanced_search_form_submit($form, &$form_state) {
     $query = '*:*';
   }
 
-
   // (Barnard custom code starts here.)
   // For our content type we always respect filters, so we're just avoiding unessecary logic.
   // // Handle filters.
   // $filter = '';
   // if (isset($form_state['values']['islandora_solr_allow_preserve_filters']) && $form_state['values']['islandora_solr_allow_preserve_filters']) {
-  //   $filter = isset($_GET['f']) ? $_GET['f'] : '';
+  //   $filter = isset($GET['f']) ? $GET['f'] : '';
   // }
 
   // Get our current params...
