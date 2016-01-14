@@ -21,10 +21,12 @@ function bc_views_islandora_solr_query($islandora_solr_query) {
   // continuing.
   if (in_array('cq', array_keys(drupal_get_query_parameters()))) {
 		// Tokenize.
-		$content_query = str_replace('_ms:', '_mt:', $_bc_views_solr_view['content_query']);
+    $islandora_solr_query->solrParams['fq'][] = str_replace('_ms:', '_mt:', $_bc_views_solr_view['content_query']);
 	}
+  else {
+    $islandora_solr_query->solrParams['fq'][] = $_bc_views_solr_view['content_query'];
+  }
 
-  $islandora_solr_query->solrParams['fq'][] = $_bc_views_solr_view['content_query'];
 	return $islandora_solr_query;
 }
 
@@ -48,10 +50,6 @@ function bc_views_islandora_solr_query_alter(&$islandora_solr_query) {
 	$islandora_solr_query->solrParams['facet.field'] = $_bc_views_solr_view['facets'];
 }
 
-// !!
-// At this point the SOLR Query is executed!!!
-// !!
-
 /**
  * Implements hook_islandora_solr_query_result().
  */
@@ -70,7 +68,8 @@ function bc_views_islandora_solr_query_alter(&$islandora_solr_query) {
  */
 function bc_views_form_islandora_solr_advanced_search_form_alter(&$form, &$form_state) {
 	global $_bc_views_solr_view;
-	if (isset($form_state['build_info']['args']['barnard_custom_view'])) {
+
+	if ($_bc_views_solr_view !== null || isset($form_state['build_info']['args']['barnard_custom_view'])) {
 		unset($form['#submit']);
 		$form['#submit'][] = 'bc_views_advanced_search_form_submit';
 		$form_state['build_info']['args']['barnard_custom_view'] = TRUE;
@@ -121,6 +120,7 @@ function bc_views_advanced_search_form_submit($form, &$form_state) {
     $query = '*:*';
   }
 
+  // (Barnard custom code starts here.)
   // For our content type we always respect filters, so we're just avoiding unessecary logic.
 
   // // Handle filters.
@@ -130,13 +130,12 @@ function bc_views_advanced_search_form_submit($form, &$form_state) {
   // }
 
   // Get our current params...
- 	$params = isset($islandora_solr_queryclass->internalSolrParams) ? $islandora_solr_queryclass->internalSolrParams : array();
+ 	$params = isset($_islandora_solr_queryclass->internalSolrParams) ? $_islandora_solr_queryclass->internalSolrParams : array();
 
- 	// Build our search string w/ params.
+ 	// Build our search string with params.
  	$search_string = array_merge($params, array('cq' => $query));
-
 	$form_state['redirect'] = array(
-    current_path(), 
+    current_path(),
     array(
       'query' => $search_string,
     ),
@@ -177,12 +176,12 @@ function bc_views_search_form($form, &$form_state) {
 }
 
 function bc_views_search_form_submit($form, &$form_state) {
-	global $islandora_solr_queryclass; 
+	global $_islandora_solr_queryclass; 
 	global $_bc_views_solr_view;
 
 	$search_string = islandora_solr_replace_slashes($form_state['values']['query']);
 
-	$params = isset($islandora_solr_queryclass->internalSolrParams) ? $islandora_solr_queryclass->internalSolrParams : array();
+	$params = isset($_islandora_solr_queryclass->internalSolrParams) ? $_islandora_solr_queryclass->internalSolrParams : array();
 
 	$query = array_merge($params, array('cq' => $search_string));
 
