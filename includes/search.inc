@@ -15,17 +15,17 @@ function bc_views_islandora_solr_query($islandora_solr_query) {
 	 * Then we set our Solr Query to the user's term with a CATCH_ALL so we get as much for our search as possible.
 	 * Finally, we return the ISQP and stop the function from continuing.
 	 */
-	if (isset(drupal_get_query_parameters()['cq'])) {
+	if (in_array('cq', array_keys(drupal_get_query_parameters()))) {
 
-		// Tokenize and set field query limiter
+		// Tokenize and set field query limit.
 		$content_query = str_replace('_ms:', '_mt:', $_bc_views_solr_view['content_query']);
 		$islandora_solr_query->solrParams['fq'][] = $content_query;
 
-		// Do our thang...
+		// Return our search ISQP.
 		return $islandora_solr_query;
 	} 
 
-	// Set field query limiter.
+	// Set field query limit.
 	$islandora_solr_query->solrParams['fq'][] = $_bc_views_solr_view['content_query'];
 	
 	return $islandora_solr_query;
@@ -33,7 +33,7 @@ function bc_views_islandora_solr_query($islandora_solr_query) {
 
 /**
  * Implements hook_islandora_solr_query_alter().
- * Modifies query before execution....
+ * Modifies query before execution. 
  */
 function bc_views_islandora_solr_query_alter(&$islandora_solr_query) {
 	global $_bc_views_solr_view;
@@ -127,8 +127,8 @@ function bc_views_advanced_search_form_submit($form, &$form_state) {
   }
 
   ## The custom code...
-  // For our content type we always respect filters, so we're just avoiding unessecary logic.
 
+  // For our content type we always respect filters, so we're just avoiding unessecary logic.
   // // Handle filters.
   // $filter = '';
   // if (isset($form_state['values']['islandora_solr_allow_preserve_filters']) && $form_state['values']['islandora_solr_allow_preserve_filters']) {
