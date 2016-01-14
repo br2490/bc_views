@@ -106,6 +106,7 @@ function bc_views_node_view($node, $view_mode = 'full') {
 			'#markup' => $solr_result_output,
 			'#weight' => '3',
 		);
+
 	}
 }
 
@@ -179,9 +180,23 @@ function custom_sort($a,$b) {
 }
 
 function bc_views_islandora_breadcrumbs_alter(&$breadcrumb, $context) {
+	foreach($breadcrumb as $order => $crumb) {
+		if((bool)strpos($crumb,'href="/node/%20?cq=')) {
+			dpm('got it '. $order);
+
+
+			// STILL A WIP ~ done for the day.
+			// (?<=href=(\"|'))(\/node)[^|]+(?=(\"|')) 
+			// This is so shit, I shouldn't be allowed near a computer... BLEH
+			$pattern = "/(?<=href=(\"|'))(\/node\/%20\?)[^;]+(?=(;))/";
+			$replacement = '/'. request_path();
+			$newcrumb = preg_replace($pattern, $replacement, $crumb);
+			dpm($newcrumb);
+
+			$breadcrumb[$order] = $newcrumb;
+		}
+	}
 	dpm($breadcrumb);
-	$breadcrumb = str_replace('href="/node/%20?cq', 'href=/' . current_path() . '?cq', $breadcrumb);
-	//return $breadcrumb;
 }
 
 
