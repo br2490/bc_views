@@ -43,7 +43,7 @@ function bc_views_form_alter(&$form, $form_state, $form_id) {
  */
 // WILL BE USED TO REMOVE THE DATE PICKER....
 function bc_views_form_islandora_solr_range_slider_form_alter(&$form, &$form_state) {
-	dpm($form);
+	// dpm($form);
 }
 
 function bc_views_node_view($node, $view_mode = 'full') {
@@ -178,6 +178,13 @@ function bc_views_block_list_alter(&$blocks) {
 function custom_sort($a,$b) {
   return $a->weight>$b->weight;
 }
+
+function bc_views_islandora_breadcrumbs_alter(&$breadcrumb, $context) {
+	dpm($breadcrumb);
+	$breadcrumb = str_replace('href="/node/%20?cq', 'href=/' . current_path() . '?cq', $breadcrumb);
+	//return $breadcrumb;
+}
+
 
 // function bc_views_block_view_alter(&$data, $block) {
 // 	global $_bc_views_solr_view;
