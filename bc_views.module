@@ -1,5 +1,8 @@
 <?php
-## TODO DESCRIBE FILE
+/**
+ * @file
+ * Collection "views" via a custom content type.
+ */
 
 require_once dirname(__FILE__) . '/includes/search.inc';
 
@@ -25,7 +28,7 @@ function bc_views_node_info() {
 }
 
 /**
- * Implements hook_form()
+ * Implements hook_form().
  */
 function bc_views_form($node, $form_state) {
   return node_content_form($node, $form_state);
@@ -35,7 +38,7 @@ function bc_views_form($node, $form_state) {
  * Implements hook_form_alter()
  */
 function bc_views_form_alter(&$form, $form_state, $form_id) {
-	// dpm($form_id);
+  // dpm($form_id);
 }
 
 /**
@@ -72,14 +75,14 @@ function bc_views_node_view($node, $view_mode = 'full') {
 		$bc_views_query_rows = field_get_items('node', $node, 'bc_views_query_rows');
 		$_bc_views_solr_view['content_query'] = $bc_views_solr_query[0]['value'];
 		$_bc_views_solr_view['rows'] = $bc_views_query_rows[0]['value'];
-		
+
 		// We want to default to the grid view, but if the user selects something else 
 		// we do not want to override them back to the grid view.
-		!isset($_GET['display']) ? $_GET['display'] = 'grid' : NULL;
+		$_GET['display'] = !isset($_GET['display']) ? 'grid' : NULL;
 
-		// Send the SOLR query and prepare to display them in our content!
-		## TO DO: Add a catch for results == 0 to return to default collection view, with a prompt.
-		if (!in_array('cq', array_keys(drupal_get_query_parameters()))) { 
+		// Send the solr query and prepare to display them in our content.
+		// TO DO: Add a catch for results == 0 to return to default collection view, with a prompt.
+		if (!in_array('cq', array_keys(drupal_get_query_parameters()))) {
 			$solr_result_output = islandora_solr();
 		}
 		else {
@@ -99,11 +102,11 @@ function bc_views_node_view($node, $view_mode = 'full') {
 			'#weight' => '2',
 			);
 
+
 		$node->content['results'] = array(
 			'#markup' => $solr_result_output,
 			'#weight' => '3',
-			);
-
+		);
 	}
 }
 
@@ -120,51 +123,48 @@ function bc_views_block_list_alter(&$blocks) {
 	global $_bc_views_solr_view;
 	global $theme_key;
 
-	// If it is not one of our UNIQUE queries, return;
+	// If it is not one of our unique queries, return;
 	if (!$_bc_views_solr_view['view']) {
 		return;
 	}
+
 	// Find the display_switch block that, for some unknown reason, is 
 	// displayed on all pages on our site (or by default)
 	// We do not want *this* display_switch block, since 
-	// we've already render and add it to our pages ['content']!
+	// we've already render and add it to our pages ['content'].
 	foreach($blocks as $block) {
 		if($block->delta == 'display_switch') {
 			unset($blocks[$block->bid]);
 		}
 	}
 
-	
-	
-	// We're going to add our sidebar content, mainly the facet block
-	// and advanced search block.
-	// Both of these are from the islandora_solr module.
-
-	$additional_blocks = array(
-		'islandora_solr' => array(
-			'advanced' => array(
-				'title' => 'Search this collection',
-      	'region' => 'sidebar_first',
-      	'weight' => 0,
-      	),
-			'basic_facets' => array(
-      	'title' => 'Filter this collection',
-      	'region' => 'sidebar_first',
-      	'weight' => 1,
-    		),
-			),
-		);
+	// We're going to add our sidebar content, mainly the facet block and
+  // advanced search block. Both of these are from the islandora_solr module.
+  $region = 'sidebar_first';
+  $additional_blocks = array(
+  	'islandora_solr' => array(
+  		'advanced' => array(
+  			'title' => 'Search this collection',
+        'region' => 'sidebar_first',
+        'weight' => 0,
+      ),
+      'basic_facets' => array(
+        'title' => 'Filter this collection',
+        'region' => 'sidebar_first',
+        'weight' => 1,
+      ),
+		),
+	);
 
 	// Fetch the additional blocks, setting the theme, region and weight.	
-	foreach ($additional_blocks as $module_name => $block_name) {
-		foreach($block_name as $bid => $block_info) {
-			$block = block_load($module_name, $bid);
-			$block->theme = $theme_key;
+	foreach ($additional_blocks as $module_name => $addl_block) {
+		foreach ($addl_block as $bid => $block_info) {
+      $block = block_load($module_name, $bid);
+      $block->theme = $theme_key;
       $block->title = $block_info['title'];
       $block->region = $block_info['region'];
       $block->weight = $block_info['weight'];
-			
-			$blocks[] = $block;
+      $blocks[] = $block;
 		}
 	}
 
