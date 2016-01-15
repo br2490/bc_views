@@ -85,8 +85,6 @@
       <?php endif; ?>
       <?php
         $bc_views_breadcrumb = array('breadcrumb'=>menu_get_active_breadcrumb());
-        dsm($bc_views_breadcrumb);
-        dsm($bc_breadcrumb);
         print theme('bc_islandora_breadcrumb', $bc_views_breadcrumb);
         isset($breadcrumb) ? print $breadcrumb : NULL;
         ?> 

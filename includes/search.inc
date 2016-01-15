@@ -94,6 +94,7 @@ function bc_views_form_islandora_solr_advanced_search_form_alter(&$form, &$form_
  */
 function bc_views_advanced_search_form_submit($form, &$form_state) {
   module_load_include('inc', 'islandora_solr', 'includes/utilities');
+  global $_islandora_solr_queryclass;
   // Collect query values.
   $query_array = array();
   foreach ($form_state['values']['terms'] as $term) {
@@ -130,14 +131,14 @@ function bc_views_advanced_search_form_submit($form, &$form_state) {
   // // Handle filters.
   // $filter = '';
   // if (isset($form_state['values']['islandora_solr_allow_preserve_filters']) && $form_state['values']['islandora_solr_allow_preserve_filters']) {
-  //   $filter = isset($GET['f']) ? $GET['f'] : '';
+  // $filter = isset($_GET['f']) ? $_GET['f'] : '';
   // }
 
   // Get our current params...
  	$params = isset($_islandora_solr_queryclass->internalSolrParams) ? $_islandora_solr_queryclass->internalSolrParams : array();
 
  	// Build our search string with params.
- 	$search_string = array_merge($params, array('cq' => $query));
+ 	$search_string = array_merge(array('cq' => $query), $params);
 	$form_state['redirect'] = array(
     current_path(),
     array(

@@ -78,7 +78,7 @@ function bc_views_node_view($node, $view_mode = 'full') {
 
 		// We want to default to the grid view, but if the user selects something else 
 		// we do not want to override them back to the grid view.
-		$_GET['display'] = !isset($_GET['display']) ? 'grid' : NULL;
+		!isset($_GET['display']) ? $_GET['display'] = 'grid' : NULL;
 
 		// Send the solr query and prepare to display them in our content.
 		// TO DO: Add a catch for results == 0 to return to default collection view, with a prompt.
@@ -179,8 +179,11 @@ function custom_sort($a,$b) {
   return $a->weight>$b->weight;
 }
 
+/**
+ * Implements islandora_breadcrumbs_alter().
+ */
 function bc_views_islandora_breadcrumbs_alter(&$breadcrumb, $context) {
-	foreach($breadcrumb as $order => $crumb) {
+	foreach($breadcrumb as $pos => $crumb) {
 		if((bool)strpos($crumb,'href="/node/%20?cq=')) {
 			
 			$substring_start = strpos($crumb,'/node/%20?cq=');
@@ -190,7 +193,7 @@ function bc_views_islandora_breadcrumbs_alter(&$breadcrumb, $context) {
 			$replacement = '/'. request_path() . '?';
 			$newcrumb = str_replace($bad_string, $replacement, $crumb);
 			
-			$breadcrumb[$order] = $newcrumb;
+			$breadcrumb[$pos] = $newcrumb;
 		}
 	}
 }
