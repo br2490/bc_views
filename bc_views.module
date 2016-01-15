@@ -46,7 +46,32 @@ function bc_views_form_alter(&$form, $form_state, $form_id) {
  */
 // WILL BE USED TO REMOVE THE DATE PICKER....
 function bc_views_form_islandora_solr_range_slider_form_alter(&$form, &$form_state) {
-	// dpm($form);
+	global $_bc_views_solr_view;
+
+	// If it is not one of our unique queries, return;
+	if (!$_bc_views_solr_view['view']) {
+		return;
+	}
+
+	// We need to access the theme layer to hide the display of the title "Date Created"
+	// @see: https://github.com/Islandora/islandora_solr_search/blob/7.x/theme/theme.inc#L108
+
+	// Get rid of datepicker bar and the corresponding submit.
+ 	$form['markup']['#access'] = FALSE;
+	$form['range_slider_submit']['#access'] = FALSE;
+}
+
+function bc_views_form_islandora_solr_date_filter_form_alter(&$form, &$form_state) {
+	global $_bc_views_solr_view;
+
+	// If it is not one of our unique queries, return;
+	if (!$_bc_views_solr_view['view']) {
+		return;
+	}
+
+	// Modify the markup to class 'expanded' and remove the hide/show link:
+	$form['date_range_expand']['#markup'] = '<span class="toggle-date-range-filter date-range-expanded"></span>';
+	//$form['date_range_expand']['#markup'] = 'Specify date range:<span class="toggle-date-range-filter date-range-expanded"></span>';
 }
 
 function bc_views_node_view($node, $view_mode = 'full') {
@@ -196,6 +221,11 @@ function bc_views_islandora_breadcrumbs_alter(&$breadcrumb, $context) {
 			$breadcrumb[$pos] = $newcrumb;
 		}
 	}
+}
+
+// UNUSED AT PRESENT
+function bc_views_islandora_solr_facet_bucket_classes_alter(&$attributes, $islandora_solr_query) {
+	// dpm($attributes);
 }
 
 // function bc_views_block_view_alter(&$data, $block) {
