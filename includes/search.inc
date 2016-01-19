@@ -127,17 +127,18 @@ function bc_views_advanced_search_form_submit($form, &$form_state) {
   }
 
   // (Barnard custom code starts here.)
-  // For our content type we always respect filters, so we're just avoiding unessecary logic.
+  // For our content type we always respect filters, so we avoid unessecary logic.
+
   // // Handle filters.
   // $filter = '';
   // if (isset($form_state['values']['islandora_solr_allow_preserve_filters']) && $form_state['values']['islandora_solr_allow_preserve_filters']) {
   // $filter = isset($_GET['f']) ? $_GET['f'] : '';
   // }
 
-  // Get our current params...
+  // Get our current params.
  	$params = isset($_islandora_solr_queryclass->internalSolrParams) ? $_islandora_solr_queryclass->internalSolrParams : array();
 
- 	// Build our search string with params.
+ 	// Build our search string with params and redirect back to collection page.
  	$search_string = array_merge(array('cq' => $query), $params);
 	$form_state['redirect'] = array(
     current_path(),
@@ -152,6 +153,8 @@ function bc_views_advanced_search_form_submit($form, &$form_state) {
   //   $filter ? array('query' => array('f' => $filter)) : array(),
   // );
 }
+
+
 
 ## REGION TEMPORARY SEARCH TESTING
 /*
