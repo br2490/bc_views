@@ -130,19 +130,29 @@ function bc_views_islandora_breadcrumbs_alter(&$breadcrumb, $context) {
 		return;
 	}
 
-	foreach($breadcrumb as $pos => $crumb) {
-		if((bool)strpos($crumb,'href="/node/%20?cq=')) {
-			
-			$substring_start = strpos($crumb,'/node/%20?cq=');
-			$substring_end = strpos($crumb, '&amp;', $substring_start) + 5;
-			
-			$bad_string = substr($crumb, $substring_start, ($substring_end-$substring_start));
-			$replacement = '/'. request_path() . '?';
-			$newcrumb = str_replace($bad_string, $replacement, $crumb);
-			
-			$breadcrumb[$pos] = $newcrumb;
+	// If there aren't breadcrumbs from islandora to alter, return;
+	if (count($breadcrumb) <= 1) {
+		return;
+	}
+
+	$dom = new DOMDocument();
+	$dom->loadHTML($breadcrumb[1]);
+	$base_path = request_path();
+
+	foreach ($dom->getElementsByTagName('a') as $link) {
+		if ($link->nodeValue == '(x)') {
+			$href_parts = explode('&', $link->getAttribute('href'));
+
+			// If we got the wrong base path, replace it.
+			if (strpos($href_parts[0], $base_path) === FALSE) {
+				unset($href_parts[0]);
+				$new_href = '/' . $base_path . '?' . implode('&', $href_parts);
+				$link->setAttribute('href', $new_href);
+				$breadcrumb[1] = $dom->saveHTML();
+			}
 		}
 	}
+	dpm($breadcrumb);
 }
 
 // UNUSED AT PRESENT
