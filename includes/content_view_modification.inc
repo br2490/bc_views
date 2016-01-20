@@ -19,7 +19,7 @@ function bc_views_block_list_alter(&$blocks) {
 	// Find the display_switch block that, for some unknown reason, is 
 	// displayed on all pages on our site (or by default)
 	// We do not want *this* display_switch block, since 
-	// we've already render and add it to our pages ['content'].
+	// we already render and add it to our pages ['content'].
 	foreach($blocks as $block) {
 		if($block->delta == 'display_switch') {
 			unset($blocks[$block->bid]);
