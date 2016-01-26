@@ -4,68 +4,6 @@
  * Description TK.
  */
 
-/**
- * Implements hook_islandora_solr_query().
- */
-function bc_views_islandora_solr_query($islandora_solr_query) {
-	global $_bc_views_solr_view;
-	if (!$_bc_views_solr_view['view']) {
-		return;
-	}
-
-	// Has the user entered a search term? Here is where we modify our collection
-  // view... First we need to find if any strings were used in the solr fq, and
-  // change them to tokenized fields (i.e. 'ms' becomes 'mt'). Then we set our
-  // solr query to the user's term with a catch-all so we get as much for our
-  // search as possible. Finally, we return the ISQP and stop the function from
-  // continuing.
-	if (in_array('cq', array_keys(drupal_get_query_parameters()))) {
-
-		// Tokenize and set field query limit.
-		$content_query = str_replace('_ms:', '_mt:', $_bc_views_solr_view['content_query']);
-		$islandora_solr_query->solrParams['fq'][] = $content_query;
-
-		// Return our search ISQP.
-		return $islandora_solr_query;
-	} 
-
-	// Set field query limit.
-	$islandora_solr_query->solrParams['fq'][] = $_bc_views_solr_view['content_query'];
-
-	return $islandora_solr_query;
-}
-
-/**
- * Implements hook_islandora_solr_query_alter().
- * Modifies query before execution.
- */
-function bc_views_islandora_solr_query_alter(&$islandora_solr_query) {
-	global $_bc_views_solr_view;
-
-	// If it is not one of our unique queries, return.
-	if (!$_bc_views_solr_view['view']) {
-		return;
-	}
-
-	// I need to figure out pagination and why 'rows' isn't restricting the
-  // results from solr. This leads to pagination, not result limits.
-	$islandora_solr_query->solrLimit = $_bc_views_solr_view['rows'];
-
-	// Update facets to only those selected...
-	$islandora_solr_query->solrParams['facet.field'] = $_bc_views_solr_view['facets'];
-}
-
-/**
- * Implements hook_islandora_solr_query_result().
- */
-// function bc_views_islandora_solr_query_result($result) {
-// }
-
-/**
- * Implements hook_islandora_solr_results_alter().
- */
-// function bc_views_islandora_solr_results_alter(&$search_results, $query_processor) {
-// }
 
 /**
  * Implements hook_form_FORM_ID_alter()
