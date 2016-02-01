@@ -2,24 +2,29 @@
 /**
  * @file
  * Collection "views" via a custom content type.
+ * 
  */
+require_once dirname(__FILE__) . '/includes/content_view.inc'; // The display of our content type is here.
+require_once dirname(__FILE__) . '/includes/search.inc'; // The modification of solr search/faceting is here.
+require_once dirname(__FILE__) . '/includes/theme.inc'; // Themeing.
+// Do I want to break breadcrumbs out for all of Barnard's site? New module?
 
-require_once dirname(__FILE__) . '/includes/search.inc';
-
+// Content global.
 $_bc_views_solr_view = array();
 
 /**
  * Implements hook_node_info().
+ * Define our content type.
  */
 function bc_views_node_info() {
   $items = array(
     'bc_views_solr_view' => array(
-      'name' => t('Barnard Collection View'),
+      'name' => t('Barnard Collection View'), // Will refactor to Islandora Solr Content Collection (name still WIP)
       'base' => 'node_content',
-      'description' => t('A content type to configure and display a collection by a specifying a SOLR query. <em>Collection</em> here is used loosely, as these pages may be curated exhibits, special projects, timely (or time-based) collections, etc.  '),
+      'description' => t('A content type to configure and display a collection by a specifying a SOLR query. <em>Collection</em> is used loosely, as these content pages may be curated exhibits, special projects, timely (or time-based) collections, etc.  '),
       'has_title' => '1',
       'title_label' => t('Collection Name (Page Name)'),
-      'help' => t('Use this page to configure and display a collection by a specifying a SOLR query.<br><em>Collection</em> here is used loosely, as these pages may be curated exhibits, special projects, timely (or time-based) collections, etc. <br> Use the <strong>Preview</strong> button to preview what the page will look like with results from the SOLR query your specified.'),
+      'help' => t('Use this page to configure and display a collection by a specifying a SOLR query.<br> Use the <strong>Preview</strong> button to preview what the results from the SOLR query your specified.'),
       'custom' => '0',
     ),
   );
@@ -41,74 +46,7 @@ function bc_views_form_alter(&$form, $form_state, $form_id) {
   // dpm($form_id);
 }
 
-/**
- * Implements hook_form_BASE_ID_alter()
- */
-// WILL BE USED TO REMOVE THE DATE PICKER....
-function bc_views_form_islandora_solr_range_slider_form_alter(&$form, &$form_state) {
-	// dpm($form);
-}
 
-function bc_views_node_view($node, $view_mode = 'full') {
-	if ($node->type == 'bc_views_solr_view') {
-		// dpm_all_islandora_blocks();
-
-		// Get our global variables.
-		global $_bc_views_solr_view;
-		global $_islandora_solr_queryclass;
-
-		// We're on a bc_views_solr_view page...
-		$_bc_views_solr_view['view'] = TRUE;
-
-		// This is a global variable - the user never has the opportunity to change this.
-		// Configure our FACETS that will be displayed on the content page.
-		foreach (field_get_items('node', $node, 'bc_views_query_facets') as $field) {
-			$_bc_views_solr_view['facets'][] = $field['value'];
-		}
-
-		/*
-		 * Fetch remaining configured variables for the content page. 
-		 * These variables the user **can** change, we store them globally as a 'backup', as a way
-		 * to return to the original "collection view," and also for use in our search handling... 
-		 */
-		$bc_views_solr_query = field_get_items('node', $node, 'bc_views_solr_query');
-		$bc_views_query_rows = field_get_items('node', $node, 'bc_views_query_rows');
-		$_bc_views_solr_view['content_query'] = $bc_views_solr_query[0]['value'];
-		$_bc_views_solr_view['rows'] = $bc_views_query_rows[0]['value'];
-
-		// We want to default to the grid view, but if the user selects something else 
-		// we do not want to override them back to the grid view.
-		!isset($_GET['display']) ? $_GET['display'] = 'grid' : NULL;
-
-		// Send the solr query and prepare to display them in our content.
-		// TO DO: Add a catch for results == 0 to return to default collection view, with a prompt.
-		if (!in_array('cq', array_keys(drupal_get_query_parameters()))) {
-			$solr_result_output = islandora_solr();
-		}
-		else {
-			$query_params = drupal_get_query_parameters();
-			$collection_query = $query_params['cq'];
-			$solr_result_output = islandora_solr($collection_query);
-		}
-
-		// Build the rest of our block's content - include the switch (list/grid) and sort blocks.
-		$node->content['sort_order_block'] = array(
-			'#markup' => block_content_render('islandora_solr', 'sort'),
-			'#weight' => '2',
-			);
-
-		$node->content['switch_block'] = array(
-			'#markup' => block_content_render('islandora_solr', 'display_switch'),
-			'#weight' => '2',
-			);
-
-		$node->content['results'] = array(
-			'#markup' => $solr_result_output,
-			'#weight' => '3',
-		);
-
-	}
-}
 
 // UNUSED AT PRESENT
 // function bc_views_menu_breadcrumb_alter(&$active_trail, $item) {
@@ -116,86 +54,64 @@ function bc_views_node_view($node, $view_mode = 'full') {
 // 	// dpm($item);
 // }
 
-/*
- * Implements hook_block_list_alter().
+/**
+ * Implements hook_islandora_breadcrumbs_alter().
  */
-function bc_views_block_list_alter(&$blocks) {
+function bc_views_islandora_breadcrumbs_alter(&$breadcrumb, $context) {
 	global $_bc_views_solr_view;
-	global $theme_key;
 
 	// If it is not one of our unique queries, return;
 	if (!$_bc_views_solr_view['view']) {
 		return;
 	}
 
-	// Find the display_switch block that, for some unknown reason, is 
-	// displayed on all pages on our site (or by default)
-	// We do not want *this* display_switch block, since 
-	// we've already render and add it to our pages ['content'].
-	foreach($blocks as $block) {
-		if($block->delta == 'display_switch') {
-			unset($blocks[$block->bid]);
-		}
+	// If there aren't breadcrumbs from islandora to alter, return;
+	if (count($breadcrumb) <= 1) {
+		return;
 	}
 
-	// We're going to add our sidebar content, mainly the facet block and
-  // advanced search block. Both of these are from the islandora_solr module.
+	$dom = new DOMDocument();
+	$dom->loadHTML($breadcrumb[1]);
+	$base_path = request_path();
 
-	$additional_blocks = array(
-    'islandora_solr' => array(
-			'advanced' => array(
-        'title' => 'Search this collection',
-        'region' => 'sidebar_first',
-        'weight' => 0,
-      ),
-      'basic_facets' => array(
-        'title' => 'Filter this collection',
-        'region' => 'sidebar_first',
-        'weight' => 1,
-      ),
-		),
-	);
+	foreach ($dom->getElementsByTagName('a') as $link) {
+		if ($link->nodeValue == '(x)') {
+			$href_parts = explode('&', $link->getAttribute('href'));
 
-	// Fetch the additional blocks, setting the theme, region and weight.	
-	foreach ($additional_blocks as $module_name => $addl_block) {
-		foreach ($addl_block as $bid => $block_info) {
-      $block = block_load($module_name, $bid);
-      $block->theme = $theme_key;
-      $block->title = $block_info['title'];
-      $block->region = $block_info['region'];
-      $block->weight = $block_info['weight'];
-      $blocks[] = $block;
+			// If we got the wrong base paht, replace it.
+			if (strpos($href_parts[0], $base_path) === FALSE) {
+				unset($href_parts[0]);
+				$new_href = '/' . $base_path . '?' . implode('&', $href_parts);
+				$link->setAttribute('href', $new_href);
+				$breadcrumb[1] = $dom->saveHTML();
+			}
 		}
 	}
-
-  // Sort the blocks
-  usort($blocks, "custom_sort");
+	// dpm($breadcrumb);
 }
 
-/**
- * Sorting function for blocks as objects. Why drupal only has sort functions for arrays is beyond me...
- */
-function custom_sort($a,$b) {
-  return $a->weight>$b->weight;
-}
+// /**
+//  * Implements islandora_breadcrumbs_alter().
+//  */
+// function bc_views_islandora_breadcrumbs_alter(&$breadcrumb, $context) {
+// 	foreach($breadcrumb as $pos => $crumb) {
+// 		if((bool)strpos($crumb,'href="/node/%20?cq=')) {
 
-/**
- * Implements islandora_breadcrumbs_alter().
- */
-function bc_views_islandora_breadcrumbs_alter(&$breadcrumb, $context) {
-	foreach($breadcrumb as $pos => $crumb) {
-		if((bool)strpos($crumb,'href="/node/%20?cq=')) {
-			
-			$substring_start = strpos($crumb,'/node/%20?cq=');
-			$substring_end = strpos($crumb, '&amp;', $substring_start) + 5;
-			
-			$bad_string = substr($crumb, $substring_start, ($substring_end-$substring_start));
-			$replacement = '/'. request_path() . '?';
-			$newcrumb = str_replace($bad_string, $replacement, $crumb);
-			
-			$breadcrumb[$pos] = $newcrumb;
-		}
-	}
+// 			$substring_start = strpos($crumb,'/node/%20?cq=');
+// 			$substring_end = strpos($crumb, '&amp;', $substring_start) + 5;
+
+// 			$bad_string = substr($crumb, $substring_start, ($substring_end-$substring_start));
+// 			$replacement = '/'. request_path() . '?';
+// 			$newcrumb = str_replace($bad_string, $replacement, $crumb);
+
+// 			$breadcrumb[$pos] = $newcrumb;
+// 		}
+// 	}
+// }
+
+// UNUSED AT PRESENT
+function bc_views_islandora_solr_facet_bucket_classes_alter(&$attributes, $islandora_solr_query) {
+	// dpm($attributes);
 }
 
 // function bc_views_block_view_alter(&$data, $block) {
@@ -204,16 +120,6 @@ function bc_views_islandora_breadcrumbs_alter(&$breadcrumb, $context) {
 // 		return;
 // 	}
 // }
-
-/**
- * Generates a rendered block from $module with name $function.
- */
-function block_content_render($module, $function) {
-	$block = block_load($module, $function);
-	$block_renderable = _block_get_renderable_array(_block_render_blocks(array($block)));
-	$render = drupal_render($block_renderable);
-	return $render;	
-}
 
 /**
  * Reports all islandora blocks available... I'm so lazy. (DEVELOPMENT)
