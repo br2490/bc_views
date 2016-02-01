@@ -1,3 +1,6 @@
+# DEPRECATED MODULE - RENAMED TO ISLANDORA_SOLR_CONTENT_TYPE
+url?
+
 # Barnard College Custom Content - Islandora Collection
 A Drupal 7.x content type for Islandora requiring only core-drupal, Islandora and, Islandora SOLR. 
 
